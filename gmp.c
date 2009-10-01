@@ -48,13 +48,23 @@ init( VALUE self, VALUE intData ) {
 	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
 	
-	switch(TYPE(intData)) {
+	switch (TYPE(intData)) {
 		case T_STRING: {
 			mpz_set_str(*i, StringValuePtr(intData), 10);
 			break;
 		}
 		case T_FIXNUM: {
 			mpz_set_ui(*i, FIX2LONG(intData));
+			break;
+		}
+		case T_DATA: {
+			if (rb_obj_class(intData) == cGMPInteger) {
+				mpz_t *gi;
+				Data_Get_Struct(intData, mpz_t, gi);
+				mpz_set(*i, *gi);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		default: {
@@ -131,12 +141,13 @@ addition( VALUE self, VALUE summand ) {
 	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(summand)) {
 		case T_DATA: {
-			// Obviamente isso assume que summand.class == GMP::Integer
-			// Infelizmente ainda não achei nada para substituir isso
-			// Precisaria de uma checagem de classe, mas como fazê-la?
-			mpz_t *sd;
-			Data_Get_Struct(summand, mpz_t, sd);
-			mpz_add(*r, *i, *sd);
+			if (rb_obj_class(summand) == cGMPInteger) {
+				mpz_t *sd;
+				Data_Get_Struct(summand, mpz_t, sd);
+				mpz_add(*r, *i, *sd);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		case T_FIXNUM: {
@@ -172,12 +183,13 @@ subtraction( VALUE self, VALUE subtraend ) {
 	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(subtraend)) {
 		case T_DATA: {
-			// Obviamente isso assume que subtraend.class == GMP::Integer
-			// Infelizmente ainda não achei nada para substituir isso
-			// Precisaria de uma checagem de classe, mas como fazê-la?
-			mpz_t *sd;
-			Data_Get_Struct(subtraend, mpz_t, sd);
-			mpz_sub(*r, *i, *sd);
+			if (rb_obj_class(subtraend) == cGMPInteger) {
+				mpz_t *sd;
+				Data_Get_Struct(subtraend, mpz_t, sd);
+				mpz_sub(*r, *i, *sd);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		case T_FIXNUM: {
@@ -214,12 +226,13 @@ multiplication( VALUE self, VALUE multiplicand ) {
 	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(multiplicand)) {
 		case T_DATA: {
-			// Obviamente isso assume que multiplicand.class == GMP::Integer
-			// Infelizmente ainda não achei nada para substituir isso
-			// Precisaria de uma checagem de classe, mas como fazê-la?
-			mpz_t *sd;
-			Data_Get_Struct(multiplicand, mpz_t, sd);
-			mpz_mul(*r, *i, *sd);
+			if (rb_obj_class(multiplicand) == cGMPInteger) {
+				mpz_t *sd;
+				Data_Get_Struct(multiplicand, mpz_t, sd);
+				mpz_mul(*r, *i, *sd);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		case T_FIXNUM: {
@@ -255,14 +268,15 @@ division( VALUE self, VALUE dividend ) {
 	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(dividend)) {
 		case T_DATA: {
-			// Obviamente isso assume que dividend.class == GMP::Integer
-			// Infelizmente ainda não achei nada para substituir isso
-			// Precisaria de uma checagem de classe, mas como fazê-la?
-			mpz_t *sd;
-			Data_Get_Struct(dividend, mpz_t, sd);
-			if (mpz_cmp_ui(*sd, (unsigned long) 0) == 0)
-				rb_raise(rb_eRuntimeError, "divided by 0");
-			mpz_fdiv_q(*r, *i, *sd);
+			if (rb_obj_class(dividend) == cGMPInteger) {
+				mpz_t *sd;
+				Data_Get_Struct(dividend, mpz_t, sd);
+				if (mpz_cmp_ui(*sd, (unsigned long) 0) == 0)
+					rb_raise(rb_eRuntimeError, "divided by 0");
+				mpz_fdiv_q(*r, *i, *sd);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		case T_FIXNUM: {
@@ -301,16 +315,23 @@ modulo( VALUE self, VALUE base ) {
 	// Decides what to do based on the base's type/class
 	switch (TYPE(base)) {
 		case T_DATA: {
-			// Obviamente isso assume que base.class == GMP::Integer
-			// Infelizmente ainda não achei nada para substituir isso
-			// Precisaria de uma checagem de classe, mas como fazê-la?
-			mpz_t *sd;
-			Data_Get_Struct(base, mpz_t, sd);
-			mpz_mod(*r, *i, *sd);
+			if (rb_obj_class(base) == cGMPInteger) {
+				mpz_t *sd;
+				Data_Get_Struct(base, mpz_t, sd);
+				// Ensures the base is not zero before doing the math
+				if (mpz_cmp_ui(*sd, (unsigned long) 0) == 0)
+					rb_raise(rb_eRuntimeError, "base cannot be zero");
+				mpz_mod(*r, *i, *sd);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		case T_FIXNUM: {
 			unsigned long sl = FIX2LONG(base);
+			// Ensures the base is not zero before doing the math
+			if (sl == (unsigned long) 0)
+				rb_raise(rb_eRuntimeError, "base cannot be zero");
 			mpz_mod_ui(*r, *i, sl);
 			break;
 		}
@@ -346,6 +367,7 @@ power( VALUE self, VALUE exp ) {
 			mpz_t *sd;
 			Data_Get_Struct(exp, mpz_t, sd);
 			// TODO
+			rb_raise(rb_eRuntimeError, "not working yet");
 			break;
 		}
 		case T_FIXNUM: {
