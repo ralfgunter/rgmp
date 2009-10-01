@@ -54,7 +54,7 @@ init( VALUE self, VALUE intData ) {
 			break;
 		}
 		case T_FIXNUM: {
-			mpz_set_ui(*i, FIX2LONG(intData));
+			mpz_set_si(*i, FIX2LONG(intData));
 			break;
 		}
 		case T_DATA: {
@@ -699,6 +699,28 @@ root_inplace( VALUE self, VALUE degree ) {
 	
 	return Qnil;
 }
+
+// Inversion (number theory; a*ã == 1 (mod m))
+// {GMP::Integer} -> {GMP::Integer}
+static VALUE
+invert_inplace( VALUE self, VALUE base ) {
+	// Creates pointers for self's and base's mpz_t structures
+	// Also creates an int which will be used to check if the number has an
+	// inverse on that base
+	mpz_t *i, *b;
+	int check;
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpz_t, i);
+	Data_Get_Struct(base, mpz_t, b);
+	
+	check = mpz_invert(*i, *i, *b);
+	
+	if (check == 0)
+		rb_raise(rb_eRuntimeError, "input is not invertible on this base");
+	
+	return Qnil;
+}
 //// end of inplace methods
 ////////////////////////////////////////////////////////////////////
 
@@ -1161,6 +1183,8 @@ factorial_singleton( VALUE klass, VALUE index ) {
 	return result;
 }
 
+// Binomial coefficient/Combination (combinatorics)
+// {GMP::Integer}, {Fixnum} -> {GMP::Integer}
 // TODO: check whether N and K have names
 static VALUE
 binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
@@ -1206,7 +1230,9 @@ binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 	return result;
 }
 
-// TODO: decide how to handle mpz_remove's output
+// Factor removal (divides exhaustively by one factor until no longer possible)
+// {GMP::Integer}, {GMP::Integer} -> {GMP::Integer}
+// TODO: decide how (and if) to handle mpz_remove's output
 static VALUE
 remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	// Creates pointers to the number's, factor's and result's mpz_t
@@ -1229,9 +1255,122 @@ remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	
 	return result;
 }
+
+// Comparison of absolutes
+// {GMP::Integer}, {GMP::Integer, Fixnum} -> {Fixnum}
+static VALUE
+compare_absolutes_singleton( VALUE klass, VALUE number, VALUE other ) {
+	// Creates pointers to the number's mpz_t structures
+	// Also creates the int placeholder for the result
+	// TODO: check whether all these declarations without immediate
+	// attributions give a performance penalty
+	mpz_t *n;
+	int result;
+	
+	// Copies back the mpz_t pointer wrapped in a ruby data object
+	Data_Get_Struct(number, mpz_t, n);
+	
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				// Creates and loads the mpz_t structure for other
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				result = mpz_cmpabs(*n, *od);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			// Loads other into an unsigned long
+			unsigned long ol = FIX2LONG(other);
+			result = mpz_cmpabs_ui(*n, ol);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	return INT2FIX(result);
+}
+
+// Inversion (number theory; a*ã == 1 (mod m))
+// {GMP::Integer} -> {GMP::Integer}
+static VALUE
+invert_singleton( VALUE klass, VALUE number, VALUE base ) {
+	// Creates pointers to the number's, base's and result's mpz_t
+	// structures
+	// Also creates an int which will be used to check if the number has an
+	// inverse on that base
+	mpz_t *n, *b, *r;
+	int check;
+	
+	// Creates a new object which will receive the result from the operation
+	// TODO: put this in its own function
+	VALUE argv[] = { rb_str_new2("0") };
+	ID class_id = rb_intern("Integer");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(number, mpz_t, n);
+	Data_Get_Struct(base, mpz_t, b);
+	Data_Get_Struct(result, mpz_t, r);
+	
+	check = mpz_invert(*r, *n, *b);
+	
+	if (check == 0)
+		rb_raise(rb_eRuntimeError, "input is not invertible on this base");
+	
+	return result;
+}
+
+// Least common multiple
+// {GMP::Integer}, {GMP::Integer, Fixnum} -> {GMP::Integer}
+static VALUE
+lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
+	// Creates pointers to the number's and result's mpz_t structures
+	mpz_t *n, *r;
+	
+	// Creates a new object which will receive the result from the operation
+	// TODO: put this in its own function
+	VALUE argv[] = { rb_str_new2("0") };
+	ID class_id = rb_intern("Integer");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(number, mpz_t, n);
+	Data_Get_Struct(result, mpz_t, r);
+	
+	// Decides what to do based on other's type/class
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				mpz_lcm(*r, *n, *od);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			unsigned long ol = FIX2LONG(other);
+			mpz_lcm_ui(*r, *n, ol);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	return result;
+}
 //// end of singleton/class methods
 ////////////////////////////////////////////////////////////////////
-
 
 
 
@@ -1283,6 +1422,7 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "next_prime!", next_prime_inplace, 0);
 	rb_define_method(cGMPInteger, "sqrt!", sqrt_inplace, 0);
 	rb_define_method(cGMPInteger, "root!", root_inplace, 1);
+	rb_define_method(cGMPInteger, "invert!", invert_inplace, 1);
 	
 	// Question-like methods
 	rb_define_method(cGMPInteger, "divisible_by?", divisible, 1);
@@ -1308,4 +1448,7 @@ Init_gmp() {
 	rb_define_singleton_method(cGMPInteger, "fac", factorial_singleton, 1);
 	rb_define_singleton_method(cGMPInteger, "bin", binomial_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "remove", remove_singleton, 2);
+	rb_define_singleton_method(cGMPInteger, "cmpabs", compare_absolutes_singleton, 2);
+	rb_define_singleton_method(cGMPInteger, "invert", invert_singleton, 2);
+	rb_define_singleton_method(cGMPInteger, "lcm", lcm_singleton, 2);
 }
