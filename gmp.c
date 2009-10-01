@@ -1370,6 +1370,50 @@ lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 	return result;
 }
 
+// Greatest common divisor
+// {GMP::Integer}, {GMP::Integer} -> {GMP::Integer}
+static VALUE
+gcd_singleton( VALUE klass, VALUE number, VALUE other ) {
+	// Creates pointers to the number's and result's mpz_t
+	// structures
+	mpz_t *n, *r;
+	
+	// Creates a new object which will receive the result from the operation
+	// TODO: put this in its own function
+	VALUE argv[] = { INT2FIX(0) };
+	ID class_id = rb_intern("Integer");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(number, mpz_t, n);
+	Data_Get_Struct(result, mpz_t, r);
+	
+	// Decides what to do based on other's type/class
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				mpz_gcd(*r, *n, *od);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			unsigned long ol = FIX2LONG(other);
+			mpz_gcd_ui(*r, *n, ol);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	return result;
+}
+
 // Jacobi symbol
 // {GMP::Integer}, {GMP::Integer} -> {Fixnum}
 static VALUE
@@ -1475,7 +1519,7 @@ Init_gmp() {
 	rb_define_singleton_method(cGMPInteger, "cmpabs", compare_absolutes_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "invert", invert_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "lcm", lcm_singleton, 2);
-	
+	rb_define_singleton_method(cGMPInteger, "gcd", gcd_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "jacobi", jacobi_singleton, 2);
 	// Whether or not this is a good idea is debatable, but for now...
 	rb_define_singleton_method(cGMPInteger, "legendre", jacobi_singleton, 2);
