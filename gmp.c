@@ -129,7 +129,7 @@ addition( VALUE self, VALUE summand ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object that will receive the result of the addition
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -171,7 +171,7 @@ subtraction( VALUE self, VALUE subtraend ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -214,7 +214,7 @@ multiplication( VALUE self, VALUE multiplicand ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -256,7 +256,7 @@ division( VALUE self, VALUE dividend ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object that will receive the result of the addition
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -303,7 +303,7 @@ modulo( VALUE self, VALUE base ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -352,7 +352,7 @@ power( VALUE self, VALUE exp ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -403,7 +403,7 @@ negation( VALUE self ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -431,7 +431,7 @@ logic_and( VALUE self, VALUE other ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -456,7 +456,7 @@ logic_ior( VALUE self, VALUE other ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -481,7 +481,7 @@ logic_xor( VALUE self, VALUE other ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -506,7 +506,7 @@ logic_not( VALUE self ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -856,7 +856,7 @@ absolute( VALUE self ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -878,7 +878,7 @@ next_prime( VALUE self ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -939,7 +939,7 @@ next( VALUE self ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -967,7 +967,7 @@ powermod( VALUE klass, VALUE self, VALUE exp, VALUE base ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1053,7 +1053,7 @@ sqrt_singleton( VALUE klass, VALUE number ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1083,7 +1083,7 @@ root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1120,7 +1120,7 @@ fibonacci_singleton( VALUE klass, VALUE index ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1144,7 +1144,7 @@ lucas_singleton( VALUE klass, VALUE index ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1168,7 +1168,7 @@ factorial_singleton( VALUE klass, VALUE index ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1199,7 +1199,7 @@ binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1241,7 +1241,7 @@ remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1309,7 +1309,7 @@ invert_singleton( VALUE klass, VALUE number, VALUE base ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1336,7 +1336,7 @@ lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
-	VALUE argv[] = { rb_str_new2("0") };
+	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
 	VALUE result = rb_class_new_instance(1, argv, class);
@@ -1368,6 +1368,30 @@ lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 	}
 	
 	return result;
+}
+
+// Jacobi symbol
+// {GMP::Integer}, {GMP::Integer} -> {Fixnum}
+static VALUE
+jacobi_singleton( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's and b's mpz_t structures
+	// Also creates the int placeholder for the result
+	mpz_t *az, *bz;
+	int result;
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(a, mpz_t, az);
+	Data_Get_Struct(b, mpz_t, bz);
+	
+	// Not sure if this is necessary, and it probably adds a little overhead
+	// GMP does not complain if the following is not the case
+	// Checks if b is odd
+	if (! mpz_odd_p(*bz))
+		rb_raise(rb_eRuntimeError, "b is not odd");
+	
+	result = mpz_jacobi(*az, *bz);
+	
+	return INT2FIX(result);
 }
 //// end of singleton/class methods
 ////////////////////////////////////////////////////////////////////
@@ -1451,4 +1475,8 @@ Init_gmp() {
 	rb_define_singleton_method(cGMPInteger, "cmpabs", compare_absolutes_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "invert", invert_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "lcm", lcm_singleton, 2);
+	
+	rb_define_singleton_method(cGMPInteger, "jacobi", jacobi_singleton, 2);
+	// Whether or not this is a good idea is debatable, but for now...
+	rb_define_singleton_method(cGMPInteger, "legendre", jacobi_singleton, 2);
 }
