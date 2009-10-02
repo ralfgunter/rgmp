@@ -171,8 +171,12 @@ addition( VALUE self, VALUE summand ) {
 			break;
 		}
 		case T_FIXNUM: {
-			unsigned long sl = FIX2LONG(summand);
-			mpz_add_ui(*r, *i, sl);
+			// Yep, also smells like a bad hack
+			// Unfortunately, GMP does not have an addition function that deals
+			// with signed ints
+			mpz_t tempSu;
+			mpz_init_set_si(tempSu, FIX2LONG(summand));
+			mpz_add(*r, *i, tempSu);
 			break;
 		}
 		default: {
@@ -213,8 +217,12 @@ subtraction( VALUE self, VALUE subtraend ) {
 			break;
 		}
 		case T_FIXNUM: {
-			unsigned long sl = FIX2LONG(subtraend);
-			mpz_sub_ui(*r, *i, sl);
+			// Yep, also smells like a bad hack
+			// Unfortunately, GMP does not have a subtraction function that
+			// deals with signed ints
+			mpz_t tempSu;
+			mpz_init_set_si(tempSu, FIX2LONG(subtraend));
+			mpz_sub(*r, *i, tempSu);
 			break;
 		}
 		default: {
@@ -256,8 +264,8 @@ multiplication( VALUE self, VALUE multiplicand ) {
 			break;
 		}
 		case T_FIXNUM: {
-			unsigned long sl = FIX2LONG(multiplicand);
-			mpz_mul_ui(*r, *i, sl);
+			signed long sl = FIX2LONG(multiplicand);
+			mpz_mul_si(*r, *i, sl);
 			break;
 		}
 		default: {
@@ -714,7 +722,7 @@ generic_comparison( VALUE self, VALUE other ) {
 ////////////////////////////////////////////////////////////////////
 //// Inplace methods (the caller inherits the result)
 // (probably) Sets self as the next prime greater than itself
-// {GMP::Integer} -> {GMP::Integer}
+// {} -> {GMP::Integer}
 static VALUE
 next_prime_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -727,6 +735,7 @@ next_prime_inplace( VALUE self ) {
 }
 
 // Absolute value
+// {} -> {GMP::Integer}
 static VALUE
 absolute_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -752,6 +761,7 @@ negation_inplace( VALUE self ) {
 }
 
 // Square root (instance method)
+// {} -> {GMP::Integer}
 static VALUE
 sqrt_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -808,7 +818,7 @@ invert_inplace( VALUE self, VALUE base ) {
 // {Fixnum, Bignum}, {Fixnum} -> {NilClass}
 static VALUE
 set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
-	// Creates a pointer for self's mpz_t structures and two unsigned long
+	// Creates a pointer for self's mpz_t structure and two unsigned long
 	// for the bit index and desired bit value
 	mpz_t *i;
 	unsigned long longIndex;
@@ -836,6 +846,82 @@ set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 	// Sets the bit accordingly
 	if (mpz_tstbit(*i, longIndex) != intNewValue)
 		mpz_combit(*i, longIndex);
+	
+	return Qnil;
+}
+
+// Addition
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+static VALUE
+addition_inplace( VALUE self, VALUE summand ) {
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
+	Data_Get_Struct(self, mpz_t, i);
+	
+	switch (TYPE(summand)) {
+		case T_DATA: {
+			if (rb_obj_class(summand) == cGMPInteger) {
+				// Creates a mpz_t pointer and loads the summand into it
+				mpz_t *sud;
+				Data_Get_Struct(summand, mpz_t, sud);
+				
+				mpz_add(*i, *i, *sud);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			// Yep, also smells like a bad hack
+			// Unfortunately, GMP does not have an addition function that deals
+			// with signed ints
+			mpz_t tempSu;
+			mpz_init_set_si(tempSu, FIX2LONG(summand));
+			mpz_add(*i, *i, tempSu);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	return Qnil;
+}
+
+// Subtraction
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+static VALUE
+subtraction_inplace( VALUE self, VALUE subtraend ) {
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
+	Data_Get_Struct(self, mpz_t, i);
+	
+	switch (TYPE(subtraend)) {
+		case T_DATA: {
+			if (rb_obj_class(subtraend) == cGMPInteger) {
+				// Creates a mpz_t pointer and loads the subtraend into it
+				mpz_t *sud;
+				Data_Get_Struct(subtraend, mpz_t, sud);
+				
+				mpz_sub(*i, *i, *sud);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			// Yep, also smells like a bad hack
+			// Unfortunately, GMP does not have a subtraction function that
+			// deals with signed ints
+			mpz_t tempSu;
+			mpz_init_set_si(tempSu, FIX2LONG(subtraend));
+			mpz_sub(*i, *i, tempSu);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
 	
 	return Qnil;
 }
@@ -1656,7 +1742,8 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "root!", root_inplace, 1);
 	rb_define_method(cGMPInteger, "invert!", invert_inplace, 1);
 	rb_define_method(cGMPInteger, "[]=", set_bit_inplace, 2);
-	
+	rb_define_method(cGMPInteger, "add!", addition_inplace, 1);
+	rb_define_method(cGMPInteger, "sub!", subtraction_inplace, 1);
 	
 	// Question-like methods
 	rb_define_method(cGMPInteger, "divisible_by?", divisible, 1);
