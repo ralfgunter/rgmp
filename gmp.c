@@ -80,17 +80,37 @@ init( VALUE self, VALUE intData ) {
 ////////////////////////////////////////////////////////////////////
 //// Conversion methods (from C types to Ruby classes)
 // To String
+// {Fixnum} -> {String}
 static VALUE
-to_string( VALUE self ) {
-	// Creates a mpz_t pointer and loads self in it
-	mpz_t *i;
-	Data_Get_Struct(self, mpz_t, i);
+to_string( VALUE argc, VALUE *argv, VALUE self ) {
+	// Creates pointers for self and the final string
+	mpz_t *s;
+	Data_Get_Struct(self, mpz_t, s);
 	
-	char *intStr = (char *) malloc(mpz_sizeinbase(*i, 10) + 2);
+	// Creates a placeholder for the optional argument
+	VALUE base;
 	
-	mpz_get_str(intStr, 10, *i);
+	// The base argument is optional, and can vary from 2 to 62 and -2 to -36
+	rb_scan_args(argc, argv, "01", &base);
 	
-	return rb_str_new2(intStr);
+	// Loads the base into an int, regardless of it having been passed or not
+	if (!FIXNUM_P(base) && !NIL_P(base))
+		rb_raise(rb_eTypeError, "base must be a fixnum");
+	int intBase = FIX2INT(base);
+	
+	// If the base hasn't been defined, this defaults it to 10
+	if (base == Qnil)
+		intBase = 10;
+	
+	// Checks if the base is within range
+	if ((intBase < 2 && intBase > -2) || (intBase < -36) || (intBase > 62))
+		rb_raise(rb_eRangeError, "base out of range");
+	
+	char *intStr = intStr = mpz_get_str(NULL, intBase, *s);
+	VALUE rStr = rb_str_new2(intStr);
+	free(intStr);
+	
+	return rStr;
 }
 
 // To Fixnum/Bignum
@@ -138,7 +158,7 @@ addition( VALUE self, VALUE summand ) {
 	Data_Get_Struct(self, mpz_t, i);
 	Data_Get_Struct(result, mpz_t, r);
 	
-	// Decides what to do based on the multiplicand's type/class
+	// Decides what to do based on the summand's type/class
 	switch (TYPE(summand)) {
 		case T_DATA: {
 			if (rb_obj_class(summand) == cGMPInteger) {
@@ -180,7 +200,7 @@ subtraction( VALUE self, VALUE subtraend ) {
 	Data_Get_Struct(self, mpz_t, i);
 	Data_Get_Struct(result, mpz_t, r);
 	
-	// Decides what to do based on the multiplicand's type/class
+	// Decides what to do based on the subtraend's type/class
 	switch (TYPE(subtraend)) {
 		case T_DATA: {
 			if (rb_obj_class(subtraend) == cGMPInteger) {
@@ -265,7 +285,7 @@ division( VALUE self, VALUE dividend ) {
 	Data_Get_Struct(self, mpz_t, i);
 	Data_Get_Struct(result, mpz_t, r);
 	
-	// Decides what to do based on the multiplicand's type/class
+	// Decides what to do based on the dividend's type/class
 	switch (TYPE(dividend)) {
 		case T_DATA: {
 			if (rb_obj_class(dividend) == cGMPInteger) {
@@ -1159,12 +1179,13 @@ lucas_singleton( VALUE klass, VALUE index ) {
 	return result;
 }
 
+
 static VALUE
-factorial_singleton( VALUE klass, VALUE index ) {
+factorial_singleton( VALUE klass, VALUE number ) {
 	// Creates pointers to the result's mpz_t structure, and
 	// creates a placeholder for the index
 	mpz_t *r;
-	unsigned long longIndex;
+	unsigned long longNumber;
 	
 	// Creates a new object which will receive the result from the operation
 	// TODO: put this in its own function
@@ -1176,9 +1197,9 @@ factorial_singleton( VALUE klass, VALUE index ) {
 	// Copies back the mpz_t pointer wrapped in a ruby data object
 	// as well as the index
 	Data_Get_Struct(result, mpz_t, r);
-	longIndex = NUM2LONG(index);
+	longNumber = NUM2LONG(number);
 	
-	mpz_fac_ui(*r, longIndex);
+	mpz_fac_ui(*r, longNumber);
 	
 	return result;
 }
@@ -1259,7 +1280,7 @@ remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 // Comparison of absolutes
 // {GMP::Integer}, {GMP::Integer, Fixnum} -> {Fixnum}
 static VALUE
-compare_absolutes_singleton( VALUE klass, VALUE number, VALUE other ) {
+comp_abs_singleton( VALUE klass, VALUE number, VALUE other ) {
 	// Creates pointers to the number's mpz_t structures
 	// Also creates the int placeholder for the result
 	// TODO: check whether all these declarations without immediate
@@ -1453,7 +1474,7 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "initialize", init, 1);
 	
 	// Converters
-	rb_define_method(cGMPInteger, "to_s", to_string, 0);
+	rb_define_method(cGMPInteger, "to_s", to_string, -1);
 	rb_define_method(cGMPInteger, "to_i", to_integer, 0);
 	rb_define_method(cGMPInteger, "to_f", to_float, 0);
 	
@@ -1516,7 +1537,7 @@ Init_gmp() {
 	rb_define_singleton_method(cGMPInteger, "fac", factorial_singleton, 1);
 	rb_define_singleton_method(cGMPInteger, "bin", binomial_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "remove", remove_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "cmpabs", compare_absolutes_singleton, 2);
+	rb_define_singleton_method(cGMPInteger, "cmpabs", comp_abs_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "invert", invert_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "lcm", lcm_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "gcd", gcd_singleton, 2);
