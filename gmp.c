@@ -233,7 +233,7 @@ multiplication( VALUE self, VALUE multiplicand ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -322,7 +322,7 @@ modulo( VALUE self, VALUE base ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -371,7 +371,7 @@ power( VALUE self, VALUE exp ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -402,6 +402,70 @@ power( VALUE self, VALUE exp ) {
 	
 	return result;
 }
+
+// Left shift (also multiplication by a power of 2)
+// {Fixnum, Bignum} -> {GMP::Integer}
+static VALUE
+left_shift( VALUE self, VALUE shift ) {
+	// Creates pointers to self's and the result's mpz_t structures
+	// Also creates a placeholder for the shift amount
+	mpz_t *i, *r;
+	unsigned long longShift;	// No pun intended
+	
+	// Creates a new object which will receive the result from the operation
+	// TODO: put this in its own macro
+	VALUE argv[] = { INT2FIX(0) };
+	ID class_id = rb_intern("Integer");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpz_t, i);
+	Data_Get_Struct(result, mpz_t, r);
+	
+	// If shift is of the correct type, then do the job!
+	// TODO: it is debatable whether or not we should check for
+	// the sign of the shift argument. If the overhead is effectively
+	// negligible, then we should do it.
+	if (!(FIXNUM_P(shift) || TYPE(shift) == T_BIGNUM))
+		rb_raise(rb_eTypeError, "shift is not of a supported type");
+	longShift = NUM2LONG(shift);
+	mpz_mul_2exp(*r, *i, longShift);
+	
+	return result;
+}
+
+// Right shift (also division by a power of 2)
+// {Fixnum, Bignum} -> {GMP::Integer}
+static VALUE
+right_shift( VALUE self, VALUE shift ) {
+	// Creates pointers to self's and the result's mpz_t structures
+	// Also creates a placeholder for the shift amount
+	mpz_t *i, *r;
+	unsigned long longShift;	// No pun intended
+	
+	// Creates a new object which will receive the result from the operation
+	// TODO: put this in its own macro
+	VALUE argv[] = { INT2FIX(0) };
+	ID class_id = rb_intern("Integer");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpz_t, i);
+	Data_Get_Struct(result, mpz_t, r);
+	
+	// If shift is of the correct type, then do the job!
+	// TODO: it is debatable whether or not we should check for
+	// the sign of the shift argument. If the overhead is effectively
+	// negligible, then we should do it.
+	if (!(FIXNUM_P(shift) || TYPE(shift) == T_BIGNUM))
+		rb_raise(rb_eTypeError, "shift is not of a supported type");
+	longShift = NUM2LONG(shift);
+	mpz_fdiv_q_2exp(*r, *i, longShift);
+	
+	return result;
+}
 //// end of binary operator methods
 ////////////////////////////////////////////////////////////////////
 
@@ -422,7 +486,7 @@ negation( VALUE self ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -450,7 +514,7 @@ logic_and( VALUE self, VALUE other ) {
 	mpz_t *i, *o, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -475,7 +539,7 @@ logic_ior( VALUE self, VALUE other ) {
 	mpz_t *i, *o, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -500,7 +564,7 @@ logic_xor( VALUE self, VALUE other ) {
 	mpz_t *i, *o, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -525,7 +589,7 @@ logic_not( VALUE self ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -663,7 +727,6 @@ next_prime_inplace( VALUE self ) {
 }
 
 // Absolute value
-// {GMP::Integer} -> {GMP::Integer}
 static VALUE
 absolute_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -689,7 +752,6 @@ negation_inplace( VALUE self ) {
 }
 
 // Square root (instance method)
-// {GMP::Integer} -> {GMP::Integer}
 static VALUE
 sqrt_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -702,7 +764,7 @@ sqrt_inplace( VALUE self ) {
 }
 
 // Nth root (instance method)
-// {GMP::Integer} -> {GMP::Integer}
+// {Fixnum, Bignum} -> {NilClass}
 static VALUE
 root_inplace( VALUE self, VALUE degree ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -721,7 +783,7 @@ root_inplace( VALUE self, VALUE degree ) {
 }
 
 // Inversion (number theory; a*ã == 1 (mod m))
-// {GMP::Integer} -> {GMP::Integer}
+// {GMP::Integer} -> {NilClass}
 static VALUE
 invert_inplace( VALUE self, VALUE base ) {
 	// Creates pointers for self's and base's mpz_t structures
@@ -738,6 +800,42 @@ invert_inplace( VALUE self, VALUE base ) {
 	
 	if (check == 0)
 		rb_raise(rb_eRuntimeError, "input is not invertible on this base");
+	
+	return Qnil;
+}
+
+// Setting a specific bit
+// {Fixnum, Bignum}, {Fixnum} -> {NilClass}
+static VALUE
+set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
+	// Creates a pointer for self's mpz_t structures and two unsigned long
+	// for the bit index and desired bit value
+	mpz_t *i;
+	unsigned long longIndex;
+	int intNewValue;
+	
+	// Checks if the arguments are of the correct type
+	if (!FIXNUM_P(newValue) || !(FIXNUM_P(index) || TYPE((index)) == T_BIGNUM))
+		rb_raise(rb_eTypeError, "inputs are of the wrong type");
+	
+	// Loads and checks if the bit is in fact a bit
+	intNewValue = FIX2INT(newValue);
+	if (intNewValue != 0 && intNewValue != 1)
+		rb_raise(rb_eTypeError, "new bit value is not a bit");
+	
+	// Loads and checks if the index is within range.
+	// Horrible hack: the first NUM2LONG messes up negative indexes
+	// while the second one does consider them.
+	longIndex = NUM2LONG(index);
+	if (NUM2LONG(index) < 0)
+		rb_raise(rb_eRangeError, "bit position out of range");
+	
+	// Copies back the mpz_t pointer wrapped in a ruby data object
+	Data_Get_Struct(self, mpz_t, i);
+	
+	// Sets the bit accordingly
+	if (mpz_tstbit(*i, longIndex) != intNewValue)
+		mpz_combit(*i, longIndex);
 	
 	return Qnil;
 }
@@ -864,6 +962,27 @@ odd( VALUE self ) {
 	else
 		return Qfalse;
 }
+
+// Precise equality (checks the class as well)
+// {GMP::Integer} -> {TrueClass, FalseClass}
+static VALUE
+precise_equality( VALUE self, VALUE other ) {
+	// Makes sure other's class is also GMP::Integer
+	if (! rb_obj_class(other) == cGMPInteger)
+		return Qfalse;
+	
+	// Creates pointers to self's and the other's mpz_t structures
+	mpz_t *i, *o;
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpz_t, i);
+	Data_Get_Struct(other, mpz_t, o);
+	
+	if (mpz_cmp(*i, *o) == 0)
+		return Qtrue;
+	else
+		return Qfalse;
+}
 //// end of question-like methods
 ////////////////////////////////////////////////////////////////////
 
@@ -875,7 +994,7 @@ absolute( VALUE self ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -897,7 +1016,7 @@ next_prime( VALUE self ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -958,7 +1077,7 @@ next( VALUE self ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -973,6 +1092,28 @@ next( VALUE self ) {
 	
 	return result;
 }
+
+// Gets the specific bit
+// {Fixnum, Bignum} -> {Fixnum}
+static VALUE
+get_bit( VALUE self, VALUE index ) {
+	// Creates a pointer for self's mpz_t structures and two unsigned long
+	// for the bit index and desired bit value
+	mpz_t *i;
+	unsigned long longIndex;
+	
+	// Loads and checks if the index is within range.
+	// Horrible hack: the first NUM2LONG messes up negative indexes
+	// while the second one does consider them.
+	longIndex = NUM2LONG(index);
+	if (NUM2LONG(index) < 0)
+		rb_raise(rb_eRangeError, "bit position out of range");
+	
+	// Copies back the mpz_t pointer wrapped in a ruby data object
+	Data_Get_Struct(self, mpz_t, i);
+	
+	return INT2FIX(mpz_tstbit(*i, longIndex));
+}
 //// end of other operations
 ////////////////////////////////////////////////////////////////////
 
@@ -986,7 +1127,7 @@ powermod( VALUE klass, VALUE self, VALUE exp, VALUE base ) {
 	mpz_t *i, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1072,7 +1213,7 @@ sqrt_singleton( VALUE klass, VALUE number ) {
 	mpz_t *n, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1102,7 +1243,7 @@ root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	unsigned long longDegree;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1139,7 +1280,7 @@ fibonacci_singleton( VALUE klass, VALUE index ) {
 	unsigned long longIndex;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1163,7 +1304,7 @@ lucas_singleton( VALUE klass, VALUE index ) {
 	unsigned long longIndex;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1188,7 +1329,7 @@ factorial_singleton( VALUE klass, VALUE number ) {
 	unsigned long longNumber;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1219,7 +1360,7 @@ binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 	unsigned long longK;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1261,7 +1402,7 @@ remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	mpz_t *n, *f, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1329,7 +1470,7 @@ invert_singleton( VALUE klass, VALUE number, VALUE base ) {
 	int check;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1356,7 +1497,7 @@ lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 	mpz_t *n, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1400,7 +1541,7 @@ gcd_singleton( VALUE klass, VALUE number, VALUE other ) {
 	mpz_t *n, *r;
 	
 	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own function
+	// TODO: put this in its own macro
 	VALUE argv[] = { INT2FIX(0) };
 	ID class_id = rb_intern("Integer");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -1485,6 +1626,8 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "/", division, 1);
 	rb_define_method(cGMPInteger, "%", modulo, 1);
 	rb_define_method(cGMPInteger, "**", power, 1);
+	rb_define_method(cGMPInteger, "<<", left_shift, 1);
+	rb_define_method(cGMPInteger, ">>", right_shift, 1);
 	
 	// Unary operators
 	rb_define_method(cGMPInteger, "+@", positive, 0);
@@ -1512,6 +1655,8 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "sqrt!", sqrt_inplace, 0);
 	rb_define_method(cGMPInteger, "root!", root_inplace, 1);
 	rb_define_method(cGMPInteger, "invert!", invert_inplace, 1);
+	rb_define_method(cGMPInteger, "[]=", set_bit_inplace, 2);
+	
 	
 	// Question-like methods
 	rb_define_method(cGMPInteger, "divisible_by?", divisible, 1);
@@ -1520,6 +1665,7 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "probable_prime?", probable_prime, 1);
 	rb_define_method(cGMPInteger, "even?", even, 0);
 	rb_define_method(cGMPInteger, "odd?", odd, 0);
+	rb_define_method(cGMPInteger, "eql?", precise_equality, 1);
 	
 	// Other operations
 	rb_define_method(cGMPInteger, "abs", absolute, 0);
@@ -1527,6 +1673,7 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "size_in_base", size_in_base, 1);
 	rb_define_method(cGMPInteger, "swap", swap, 1);
 	rb_define_method(cGMPInteger, "next", next, 0);
+	rb_define_method(cGMPInteger, "[]", get_bit, 1);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPInteger, "powermod", powermod, 3);
@@ -1542,6 +1689,9 @@ Init_gmp() {
 	rb_define_singleton_method(cGMPInteger, "lcm", lcm_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "gcd", gcd_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "jacobi", jacobi_singleton, 2);
+
+	// Aliases
+	rb_define_method(cGMPInteger, "modulo", modulo, 1);
 	// Whether or not this is a good idea is debatable, but for now...
 	rb_define_singleton_method(cGMPInteger, "legendre", jacobi_singleton, 2);
 }
