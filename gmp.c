@@ -131,12 +131,12 @@ to_integer( VALUE self ) {
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// See comments on 'case T_BIGNUM:' on the init function above
-	if (mpz_cmp_ui(*i, FIXNUM_MAX) > 0)
+	if (mpz_cmp_ui(*i, FIXNUM_MAX) > 0 || mpz_cmp_ui(*i, FIXNUM_MIN) < 0) {
 		return rb_cstr2inum(mpz_get_str(NULL, 10, *i), 10);
-	
-	signed long tempLong = mpz_get_si(*i);
-	
-	return LONG2FIX(tempLong);
+	} else {
+		signed long tempLong = mpz_get_si(*i);
+		return LONG2FIX(tempLong);
+	}
 }
 
 // To Float (double-precision floating point number)
@@ -156,7 +156,7 @@ to_float( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 //// Binary arithmetical operators (operations taking two values)
 // Addition (+)
-// {GMP::Integer, Fixnum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
 static VALUE
 addition( VALUE self, VALUE summand ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -188,9 +188,18 @@ addition( VALUE self, VALUE summand ) {
 			// Yep, also smells like a bad hack
 			// Unfortunately, GMP does not have an addition function that deals
 			// with signed ints
-			mpz_t tempSu;
-			mpz_init_set_si(tempSu, FIX2LONG(summand));
-			mpz_add(*r, *i, tempSu);
+			mpz_t tempSuf;
+			mpz_init_set_si(tempSuf, FIX2LONG(summand));
+			mpz_add(*r, *i, tempSuf);
+			mpz_clear(tempSuf);
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempSub;
+			VALUE str = rb_big2str(summand, 10);
+			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
+			mpz_add(*r, *i, tempSub);
+			mpz_clear(tempSub);
 			break;
 		}
 		default: {
@@ -202,7 +211,7 @@ addition( VALUE self, VALUE summand ) {
 }
 
 // Subtraction (-)
-// {GMP::Integer, Fixnum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
 static VALUE
 subtraction( VALUE self, VALUE subtraend ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -234,9 +243,17 @@ subtraction( VALUE self, VALUE subtraend ) {
 			// Yep, also smells like a bad hack
 			// Unfortunately, GMP does not have a subtraction function that
 			// deals with signed ints
-			mpz_t tempSu;
-			mpz_init_set_si(tempSu, FIX2LONG(subtraend));
-			mpz_sub(*r, *i, tempSu);
+			mpz_t tempSuf;
+			mpz_init_set_si(tempSuf, FIX2LONG(subtraend));
+			mpz_sub(*r, *i, tempSuf);
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempSub;
+			VALUE str = rb_big2str(subtraend, 10);
+			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
+			mpz_sub(*r, *i, tempSub);
+			mpz_clear(tempSub);
 			break;
 		}
 		default: {
@@ -248,7 +265,7 @@ subtraction( VALUE self, VALUE subtraend ) {
 }
 
 // Multiplication (*)
-// {GMP::Integer, Fixnum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
 static VALUE
 multiplication( VALUE self, VALUE multiplicand ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -282,6 +299,14 @@ multiplication( VALUE self, VALUE multiplicand ) {
 			mpz_mul_si(*r, *i, sl);
 			break;
 		}
+		case T_BIGNUM: {
+			mpz_t tempMub;
+			VALUE str = rb_big2str(multiplicand, 10);
+			mpz_init_set_str(tempMub, StringValuePtr(str), 10);
+			mpz_mul(*r, *i, tempMub);
+			mpz_clear(tempMub);
+			break;
+		}
 		default: {
 			rb_raise(rb_eTypeError, "input data type not supported");
 		}
@@ -291,7 +316,7 @@ multiplication( VALUE self, VALUE multiplicand ) {
 }
 
 // Division (/)
-// {GMP::Integer, Fixnum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
 static VALUE
 division( VALUE self, VALUE dividend ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -328,6 +353,14 @@ division( VALUE self, VALUE dividend ) {
 			mpz_fdiv_q_ui(*r, *i, ((sl > 0) ? sl : -sl));
 			if (sl < 0)
 				mpz_neg(*r, *r);
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempDb;
+			VALUE str = rb_big2str(dividend, 10);
+			mpz_init_set_str(tempDb, StringValuePtr(str), 10);
+			mpz_fdiv_q(*r, *i, tempDb);
+			mpz_clear(tempDb);
 			break;
 		}
 		default: {
@@ -388,7 +421,7 @@ modulo( VALUE self, VALUE base ) {
 }
 
 // Exponetiation (**)
-// {Fixnum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
 static VALUE
 power( VALUE self, VALUE exp ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -408,15 +441,40 @@ power( VALUE self, VALUE exp ) {
 	// Decides what to do based on the exponent's type/class
 	switch (TYPE(exp)) {
 		case T_DATA: {
-			mpz_t *sd;
-			Data_Get_Struct(exp, mpz_t, sd);
-			// TODO
-			rb_raise(rb_eRuntimeError, "not working yet");
+			if (rb_obj_class(exp) == cGMPInteger) {
+				// Sorry, but this'll take a while to test for accuracy...
+				
+				// Unfortunately GMP does not provide an exponetiation method
+				// that takes mpz_t exponents, so once more we have to fallback
+				// to a hackish workaround
+				mpz_t *sd, tempExp;
+				Data_Get_Struct(exp, mpz_t, sd);
+				mpz_init_set(tempExp, *sd);
+				mpz_add_ui(tempExp, tempExp, 1);
+				mpz_powm(*r, *i, *sd, tempExp);
+				mpz_clear(tempExp);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
 			break;
 		}
 		case T_FIXNUM: {
 			unsigned long sl = FIX2LONG(exp);
+			if ((signed long) sl < 0)
+				rb_raise(rb_eRangeError, "exponent must be non-negative");
 			mpz_pow_ui(*r, *i, sl);
+			break;
+		}
+		case T_BIGNUM: {
+			// Sorry, but this'll take a while to test for accuracy...
+			mpz_t tempExb1, tempExb2;
+			VALUE str = rb_big2str(exp, 10);
+			mpz_init_set_str(tempExb1, StringValuePtr(str), 10);
+			mpz_init_set(tempExb2, tempExb1);
+			mpz_add_ui(tempExb2, tempExb2, 1);
+			mpz_powm(*r, *i, tempExb1, tempExb2);
+			mpz_clear(tempExb1);
+			mpz_clear(tempExb2);
 			break;
 		}
 		default: {
@@ -1795,6 +1853,8 @@ Init_gmp() {
 
 	// Aliases
 	rb_define_method(cGMPInteger, "modulo", modulo, 1);
+	rb_define_method(cGMPInteger, "magnitude", absolute, 0);
+	rb_define_method(cGMPInteger, "to_int", to_integer, 0);
 	// Whether or not this is a good idea is debatable, but for now...
 	rb_define_singleton_method(cGMPInteger, "legendre", jacobi_singleton, 2);
 }
