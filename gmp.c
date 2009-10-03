@@ -136,7 +136,7 @@ to_integer( VALUE self ) {
 	
 	signed long tempLong = mpz_get_si(*i);
 	
-	return LONG2FIX(tempLong + 1);
+	return LONG2FIX(tempLong);
 }
 
 // To Float (double-precision floating point number)
