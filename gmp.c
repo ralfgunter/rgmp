@@ -695,99 +695,317 @@ logic_not( VALUE self ) {
 // {GMP::Integer} -> {TrueClass, FalseClass}
 static VALUE
 equality_test( VALUE self, VALUE other ) {
-	// Creates pointers to self's and the other's mpz_t structures
-	mpz_t *i, *o;
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	if (mpz_cmp(*i, *o) == 0)
-		return Qtrue;
-	else
-		return Qfalse;
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				
+				if (mpz_cmp(*i, *od) == 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long ol = FIX2LONG(other);
+			if (mpz_cmp_si(*i, ol) == 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempOb;
+			VALUE str = rb_big2str(other, 10);
+			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			if (mpz_cmp(*i, tempOb) == 0) {
+				mpz_clear(tempOb);
+				return Qtrue;
+			} else {
+				mpz_clear(tempOb);
+				return Qfalse;
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
 }
 
 // Greater than (>)
 // {GMP::Integer} -> {TrueClass, FalseClass}
 static VALUE
 greater_than_test( VALUE self, VALUE other ) {
-	// Creates pointers to self's and the other's mpz_t structures
-	mpz_t *i, *o;
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	if (mpz_cmp(*i, *o) > 0)
-		return Qtrue;
-	else
-		return Qfalse;
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				
+				if (mpz_cmp(*i, *od) > 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long ol = FIX2LONG(other);
+			if (mpz_cmp_si(*i, ol) > 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempOb;
+			VALUE str = rb_big2str(other, 10);
+			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			if (mpz_cmp(*i, tempOb) > 0) {
+				mpz_clear(tempOb);
+				return Qtrue;
+			} else {
+				mpz_clear(tempOb);
+				return Qfalse;
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
 }
 
 // Less than (<)
 // {GMP::Integer} -> {TrueClass, FalseClass}
 static VALUE
 less_than_test( VALUE self, VALUE other ) {
-	// Creates pointers to self's and the other's mpz_t structures
-	mpz_t *i, *o;
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	if (mpz_cmp(*i, *o) < 0)
-		return Qtrue;
-	else
-		return Qfalse;
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				
+				if (mpz_cmp(*i, *od) < 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long ol = FIX2LONG(other);
+			if (mpz_cmp_si(*i, ol) < 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempOb;
+			VALUE str = rb_big2str(other, 10);
+			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			if (mpz_cmp(*i, tempOb) < 0) {
+				mpz_clear(tempOb);
+				return Qtrue;
+			} else {
+				mpz_clear(tempOb);
+				return Qfalse;
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
 }
 
 // Greater than or equal to (>=)
 // {GMP::Integer} -> {TrueClass, FalseClass}
 static VALUE
 greater_than_or_equal_to_test( VALUE self, VALUE other ) {
-	// Creates pointers to self's and the other's mpz_t structures
-	mpz_t *i, *o;
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	if (mpz_cmp(*i, *o) >= 0)
-		return Qtrue;
-	else
-		return Qfalse;
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				
+				if (mpz_cmp(*i, *od) >= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long ol = FIX2LONG(other);
+			if (mpz_cmp_si(*i, ol) >= 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempOb;
+			VALUE str = rb_big2str(other, 10);
+			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			if (mpz_cmp(*i, tempOb) >= 0) {
+				mpz_clear(tempOb);
+				return Qtrue;
+			} else {
+				mpz_clear(tempOb);
+				return Qfalse;
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
 }
 
 // Less than or equal to (<=)
 // {GMP::Integer} -> {TrueClass, FalseClass}
 static VALUE
 less_than_or_equal_to_test( VALUE self, VALUE other ) {
-	// Creates pointers to self's and the other's mpz_t structures
-	mpz_t *i, *o;
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	if (mpz_cmp(*i, *o) <= 0)
-		return Qtrue;
-	else
-		return Qfalse;
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				
+				if (mpz_cmp(*i, *od) <= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long ol = FIX2LONG(other);
+			if (mpz_cmp_si(*i, ol) <= 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempOb;
+			VALUE str = rb_big2str(other, 10);
+			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			if (mpz_cmp(*i, tempOb) <= 0) {
+				mpz_clear(tempOb);
+				return Qtrue;
+			} else {
+				mpz_clear(tempOb);
+				return Qfalse;
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
 }
 
 // Generic comparison (<=>)
 // {GMP::Integer} -> {Fixnum}
 static VALUE
 generic_comparison( VALUE self, VALUE other ) {
-	// Creates pointers to self's and the other's mpz_t structures
-	mpz_t *i, *o;
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	return INT2FIX(mpz_cmp(*i, *o));
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPInteger) {
+				mpz_t *od;
+				Data_Get_Struct(other, mpz_t, od);
+				return INT2FIX(mpz_cmp(*i, *od));
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long ol = FIX2LONG(other);
+			return INT2FIX(mpz_cmp_si(*i, ol));
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempOb;
+			VALUE str = rb_big2str(other, 10);
+			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			return INT2FIX(mpz_cmp(*i, tempOb));
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
 }
 
 //// end of comparison methods
@@ -935,11 +1153,9 @@ addition_inplace( VALUE self, VALUE summand ) {
 	switch (TYPE(summand)) {
 		case T_DATA: {
 			if (rb_obj_class(summand) == cGMPInteger) {
-				// Creates a mpz_t pointer and loads the summand into it
-				mpz_t *sud;
-				Data_Get_Struct(summand, mpz_t, sud);
-				
-				mpz_add(*i, *i, *sud);
+				mpz_t *sd;
+				Data_Get_Struct(summand, mpz_t, sd);
+				mpz_add(*i, *i, *sd);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -949,9 +1165,18 @@ addition_inplace( VALUE self, VALUE summand ) {
 			// Yep, also smells like a bad hack
 			// Unfortunately, GMP does not have an addition function that deals
 			// with signed ints
-			mpz_t tempSu;
-			mpz_init_set_si(tempSu, FIX2LONG(summand));
-			mpz_add(*i, *i, tempSu);
+			mpz_t tempSuf;
+			mpz_init_set_si(tempSuf, FIX2LONG(summand));
+			mpz_add(*i, *i, tempSuf);
+			mpz_clear(tempSuf);
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempSub;
+			VALUE str = rb_big2str(summand, 10);
+			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
+			mpz_add(*i, *i, tempSub);
+			mpz_clear(tempSub);
 			break;
 		}
 		default: {
@@ -973,11 +1198,9 @@ subtraction_inplace( VALUE self, VALUE subtraend ) {
 	switch (TYPE(subtraend)) {
 		case T_DATA: {
 			if (rb_obj_class(subtraend) == cGMPInteger) {
-				// Creates a mpz_t pointer and loads the subtraend into it
-				mpz_t *sud;
-				Data_Get_Struct(subtraend, mpz_t, sud);
-				
-				mpz_sub(*i, *i, *sud);
+				mpz_t *sd;
+				Data_Get_Struct(subtraend, mpz_t, sd);
+				mpz_sub(*i, *i, *sd);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -987,9 +1210,17 @@ subtraction_inplace( VALUE self, VALUE subtraend ) {
 			// Yep, also smells like a bad hack
 			// Unfortunately, GMP does not have a subtraction function that
 			// deals with signed ints
-			mpz_t tempSu;
-			mpz_init_set_si(tempSu, FIX2LONG(subtraend));
-			mpz_sub(*i, *i, tempSu);
+			mpz_t tempSuf;
+			mpz_init_set_si(tempSuf, FIX2LONG(subtraend));
+			mpz_sub(*i, *i, tempSuf);
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempSub;
+			VALUE str = rb_big2str(subtraend, 10);
+			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
+			mpz_sub(*i, *i, tempSub);
+			mpz_clear(tempSub);
 			break;
 		}
 		default: {
@@ -1139,6 +1370,34 @@ precise_equality( VALUE self, VALUE other ) {
 	Data_Get_Struct(other, mpz_t, o);
 	
 	if (mpz_cmp(*i, *o) == 0)
+		return Qtrue;
+	else
+		return Qfalse;
+}
+
+// Is it zero?
+// {} -> {TrueClass, FalseClass}
+static VALUE
+zero( VALUE self ) {
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
+	Data_Get_Struct(self, mpz_t, i);
+	
+	if (mpz_sgn(*i) == 0)
+		return Qtrue;
+	else
+		return Qfalse;
+}
+
+// Or is it not zero?
+// {} -> {TrueClass, FalseClass}
+static VALUE
+nonzero( VALUE self ) {
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
+	Data_Get_Struct(self, mpz_t, i);
+	
+	if (mpz_sgn(*i) != 0)
 		return Qtrue;
 	else
 		return Qfalse;
@@ -1827,6 +2086,8 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "even?", even, 0);
 	rb_define_method(cGMPInteger, "odd?", odd, 0);
 	rb_define_method(cGMPInteger, "eql?", precise_equality, 1);
+	rb_define_method(cGMPInteger, "zero?", zero, 0);
+	rb_define_method(cGMPInteger, "nonzero?", nonzero, 0);
 	
 	// Other operations
 	rb_define_method(cGMPInteger, "abs", absolute, 0);
