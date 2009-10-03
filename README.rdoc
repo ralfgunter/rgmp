@@ -1,22 +1,22 @@
 =rGMP
 
-rGMP is another Ruby wrapper for the <b>GNU Multiple Precision</b> arithmetic library written in C, C++ and assembly.
+rGMP is another Ruby wrapper for the <b>GNU Multiple Precision</b>, which is a very fast math library written in C, C++ and assembly.
 
-One of the main goals is to effectively replace all of Numeric in terms of functionality and then surpass it, giving Ruby that extra oomph it needs to work with math-heavy projects (such as in scientific computing). To achieve this, rGMP will implement all applicable methods from the GMP library, with both regular (fast, very ruby-like) and in-place (faster, avoids some object creating) methods. Also, it aims to be fully compatible with the current Numeric class, making it an easier transition for those whose projects demand a lot of performance but are in an advanced stage of development.
+One of the main goals is to effectively replace all of Bignum/Numeric in terms of functionality and then surpass them, giving Ruby that extra oomph it needs to work with math-heavy projects (such as in scientific computing). To achieve this, rGMP will implement all applicable methods from the GMP library, with both regular (fast, very ruby-like) and in-place (faster, avoids some object creating) methods. Also, it aims to be fully compatible with the current Bignum class, making it an easier transition for those whose projects demand a lot of performance but are in an advanced stage of development.
 
 It does not mean, however, that it IS in fact a drop-in replacement, since the usual way of doing things might be inefficient some times - regular vs. in-place methods for one - therefore proper documentation is a must as well. In spite of that, the speed-up given by GMP for reasonably sized numbers is such that it may obfuscate the bottleneck that is the ruby-to-c/c-to-ruby converting voodoo that takes place in almost all methods.
 
-For more information about GMP, please visit http://gmplib.org/
+For more information about GMP, please visit http://gmplib.org
 
 =License
 
-This project is licensed under the GPL v3 and later.
+This project is licensed under the GPL v3 and later, but I'm pondering whether or not to use LGPL instead.
 
 =Notes
 
 Currently, this is a hobby project to help me learn C, Ruby, and GMP, which shows in the quality of the code!
 
-Please do take note that this is my first public project, and my experience with C is less than two or three months old, with Ruby being of a couple of months more. This means that it is almost certain that there are vast amounts of memory leaks, buffer overflows, general code untidiness and inefficient constructions, to say the least.
+Please do take note that this is my first public project, and my experience with C is less than two or three months old, with Ruby being of a couple of months more. This means that it is almost certain that there are vast amounts of memory leaks, buffer overflows, general code untidiness, inaccurate/outrageously wrong comments and inefficient constructions, to say the least!
 
 Thus, I believe it should not yet be used in production environments, unless you want to amuse yourself and your colleagues :).
 
