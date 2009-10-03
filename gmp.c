@@ -67,6 +67,16 @@ init( VALUE self, VALUE intData ) {
 			}
 			break;
 		}
+		case T_BIGNUM: {
+			// I have a sort of bittersweet feeling about this one.
+			// On the one hand, this more or less guarantees compatibility with
+			// future Ruby versions by avoiding some internal ties with the way
+			// Bignum is implemented, but on the other hand, it is not without
+			// a (not yet measured) performance drop.
+			VALUE str = rb_big2str(intData, 10);
+			mpz_set_str(*i, StringValuePtr(str), 10);
+			break;
+		}
 		default: {
 			rb_raise(rb_eTypeError, "input data type not supported");
 		}
@@ -106,7 +116,7 @@ to_string( VALUE argc, VALUE *argv, VALUE self ) {
 	if ((intBase < 2 && intBase > -2) || (intBase < -36) || (intBase > 62))
 		rb_raise(rb_eRangeError, "base out of range");
 	
-	char *intStr = intStr = mpz_get_str(NULL, intBase, *s);
+	char *intStr = mpz_get_str(NULL, intBase, *s);
 	VALUE rStr = rb_str_new2(intStr);
 	free(intStr);
 	
@@ -120,9 +130,13 @@ to_integer( VALUE self ) {
 	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
 	
+	// See comments on 'case T_BIGNUM:' on the init function above
+	if (mpz_cmp_ui(*i, FIXNUM_MAX) > 0)
+		return rb_cstr2inum(mpz_get_str(NULL, 10, *i), 10);
+	
 	signed long tempLong = mpz_get_si(*i);
 	
-	return LONG2FIX(tempLong);
+	return LONG2FIX(tempLong + 1);
 }
 
 // To Float (double-precision floating point number)
@@ -308,10 +322,12 @@ division( VALUE self, VALUE dividend ) {
 			break;
 		}
 		case T_FIXNUM: {
-			unsigned long sl = FIX2LONG(dividend);
-			if (sl == (unsigned long) 0)
+			signed long sl = FIX2LONG(dividend);
+			if (sl == 0)
 				rb_raise(rb_eRuntimeError, "divided by 0");
-			mpz_fdiv_q_ui(*r, *i, sl);
+			mpz_fdiv_q_ui(*r, *i, ((sl > 0) ? sl : -sl));
+			if (sl < 0)
+				mpz_neg(*r, *r);
 			break;
 		}
 		default: {
