@@ -1,6 +1,6 @@
 =rGMP
 
-rGMP is another Ruby wrapper for the <b>GNU Multiple Precision</b>, which is a very fast math library written in C, C++ and assembly.
+rGMP is another Ruby wrapper for the <b>GNU Multiple Precision</b> library, which is a very fast math library written in C, C++ and assembly.
 
 One of the main goals is to effectively replace all of Bignum/Numeric in terms of functionality and then surpass them, giving Ruby that extra oomph it needs to work with math-heavy projects (such as in scientific computing). To achieve this, rGMP will implement all applicable methods from the GMP library, with both regular (fast, very ruby-like) and in-place (faster, avoids some object creating) methods. Also, it aims to be fully compatible with the current Bignum class, making it an easier transition for those whose projects demand a lot of performance but are in an advanced stage of development.
 
@@ -10,7 +10,7 @@ For more information about GMP, please visit http://gmplib.org
 
 =License
 
-This project is licensed under the GPL v3 and later, but I'm pondering whether or not to use LGPL instead.
+This project is licensed under the GPL v3 and later, but I'm pondering whether or not to use LGPL as well.
 
 =Notes
 
