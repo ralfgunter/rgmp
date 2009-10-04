@@ -1143,7 +1143,7 @@ set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 }
 
 // Addition
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {}
 static VALUE
 addition_inplace( VALUE self, VALUE summand ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -1188,7 +1188,7 @@ addition_inplace( VALUE self, VALUE summand ) {
 }
 
 // Subtraction
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum, Bignum} -> {}
 static VALUE
 subtraction_inplace( VALUE self, VALUE subtraend ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -1221,6 +1221,47 @@ subtraction_inplace( VALUE self, VALUE subtraend ) {
 			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
 			mpz_sub(*i, *i, tempSub);
 			mpz_clear(tempSub);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	return Qnil;
+}
+
+// Multiplication
+// {GMP::Integer, Fixnum, Bignum} -> {}
+static VALUE
+multiplication_inplace( VALUE self, VALUE multiplicand ) {
+	// Creates a mpz_t pointer and loads self in it
+	mpz_t *i;
+	Data_Get_Struct(self, mpz_t, i);
+		
+	// Decides what to do based on the multiplicand's type/class
+	switch (TYPE(multiplicand)) {
+		case T_DATA: {
+			if (rb_obj_class(multiplicand) == cGMPInteger) {
+				mpz_t *sd;
+				Data_Get_Struct(multiplicand, mpz_t, sd);
+				mpz_mul(*i, *i, *sd);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			signed long sl = FIX2LONG(multiplicand);
+			mpz_mul_si(*i, *i, sl);
+			break;
+		}
+		case T_BIGNUM: {
+			mpz_t tempMub;
+			VALUE str = rb_big2str(multiplicand, 10);
+			mpz_init_set_str(tempMub, StringValuePtr(str), 10);
+			mpz_mul(*i, *i, tempMub);
+			mpz_clear(tempMub);
 			break;
 		}
 		default: {
@@ -2077,6 +2118,7 @@ Init_gmp() {
 	rb_define_method(cGMPInteger, "[]=", set_bit_inplace, 2);
 	rb_define_method(cGMPInteger, "add!", addition_inplace, 1);
 	rb_define_method(cGMPInteger, "sub!", subtraction_inplace, 1);
+	rb_define_method(cGMPInteger, "mul!", multiplication_inplace, 1);
 	
 	// Question-like methods
 	rb_define_method(cGMPInteger, "divisible_by?", divisible, 1);
