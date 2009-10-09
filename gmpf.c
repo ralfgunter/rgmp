@@ -97,6 +97,20 @@ f_to_string( VALUE self ) {
 	
 	return rb_str_new2(str);
 }
+
+// To Float
+// {GMP::Float} -> {Float}
+static VALUE
+f_to_float( VALUE self ) {
+	// Creates a mpf_t pointer and loads self into it
+	mpf_t *s;
+	Data_Get_Struct(self, mpf_t, s);
+	
+	// Converts mpf_t to C double, truncating if required (done internally)
+	double result = mpf_get_d(*s);
+	
+	return rb_float_new(result);
+}
 //// end of conversion methods
 ////////////////////////////////////////////////////////////////////
 
@@ -185,7 +199,7 @@ f_subtraction( VALUE self, VALUE subtraend ) {
 	Data_Get_Struct(self, mpf_t, f);
 	Data_Get_Struct(result, mpf_t, r);
 	
-	// Decides what to do based on the summand's type/class
+	// Decides what to do based on the subtraend's type/class
 	switch (TYPE(subtraend)) {
 		case T_DATA: {
 			if (rb_obj_class(subtraend) == cGMPFloat) {
@@ -241,7 +255,7 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *f, *r;
 	
-	// Creates a new object that will receive the result of the subtraction
+	// Creates a new object that will receive the result of the multiplication
 	VALUE argv[] = { rb_float_new(0.0) };
 	ID class_id = rb_intern("Float");
 	VALUE class = rb_const_get(mGMP, class_id);
@@ -251,7 +265,7 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 	Data_Get_Struct(self, mpf_t, f);
 	Data_Get_Struct(result, mpf_t, r);
 	
-	// Decides what to do based on the summand's type/class
+	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(multiplicand)) {
 		case T_DATA: {
 			if (rb_obj_class(multiplicand) == cGMPFloat) {
@@ -264,9 +278,9 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 			break;
 		}
 		case T_FLOAT: {
-			// GMP does not provide support for adding a mpf_t to a C double
-			// so first we have to convert Ruby's Float to a mpf_t and then do
-			// the operation
+			// GMP does not provide support for multiplying a mpf_t with a
+			// C double, so first we have to convert Ruby's Float to a mpf_t
+			// and then do the operation
 			mpf_t tempMufl;
 			mpf_init_set_d(tempMufl, NUM2DBL(multiplicand));
 			mpf_mul(*r, *f, tempMufl);
@@ -295,7 +309,95 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 	
 	return result;
 }
-//// end of conversion methods
+
+// Division (/)
+// {GMP::Float, Float, Fixnum, Bignum} -> {GMP::Float}
+static VALUE
+f_division( VALUE self, VALUE dividend ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *f, *r;
+	
+	// Creates a new object that will receive the result of the multiplication
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers from ruby to C
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	// Decides what to do based on the dividend's type/class
+	switch (TYPE(dividend)) {
+		case T_DATA: {
+			if (rb_obj_class(dividend) == cGMPFloat) {
+				mpf_t *dd;
+				Data_Get_Struct(dividend, mpf_t, dd);
+				mpf_div(*r, *f, *dd);
+			} else {
+				rb_raise(rb_eTypeError, "dividend's class not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			// GMP does not provide support for dividing a mpf_t by a
+			// C double, so first we have to convert Ruby's Float to a mpf_t
+			// and then do the operation
+			mpf_t tempDifl;
+			mpf_init_set_d(tempDifl, NUM2DBL(dividend));
+			mpf_div(*r, *f, tempDifl);
+			mpf_clear(tempDifl);
+			break;
+		}
+		case T_FIXNUM: {
+			signed long dl = FIX2LONG(dividend);
+			mpf_div_ui(*r, *f, (dl > 0) ? dl : -dl);
+			if (dl < 0)
+				mpf_neg(*r, *r);
+			break;
+		}
+		case T_BIGNUM: {
+			mpf_t tempDib;
+			VALUE str = rb_big2str(dividend, 10);
+			mpf_init_set_str(tempDib, StringValuePtr(str), 10);
+			mpf_div(*r, *f, tempDib);
+			mpf_clear(tempDib);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "dividend's class not supported");
+		}
+	}
+	
+	return result;
+}
+
+// Exponentiation (**)
+// {Fixnum} -> {GMP::Float}
+// TODO: incorporate MPFR
+static VALUE
+f_power( VALUE self, VALUE exponent ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *f, *r;
+	
+	// Creates a new object that will receive the result of the multiplication
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers from ruby to C
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	// GMP only supports positive integral exponents
+	if (!FIXNUM_P(exponent))
+		rb_raise(rb_eTypeError, "exponent must be a (positive) Fixnum");
+	mpf_pow_ui(*r, *f, FIX2LONG(exponent));
+	
+	return result;
+}
+//// end of binary operator methods
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
@@ -329,6 +431,277 @@ f_negation( VALUE self ) {
 	
 	return result;
 }
+//// end of unary operator methods
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+//// Comparison methods
+// Equality (==)
+// {GMP::Float, Float} -> {TrueClass, FalseClass}
+static VALUE
+f_equality_test( VALUE self, VALUE other ) {
+	// Creates a mpf_t pointer and loads self in it
+	mpf_t *f;
+	Data_Get_Struct(self, mpf_t, f);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPFloat) {
+				mpf_t *od;
+				Data_Get_Struct(other, mpf_t, od);
+				
+				if (mpf_cmp(*f, *od) == 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			double of = RFLOAT_VALUE(other);
+			
+			if (mpf_cmp_d(*f, of) == 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
+}
+
+// Greater than (>)
+// {GMP::Float, Float} -> {TrueClass, FalseClass}
+static VALUE
+f_greater_than_test( VALUE self, VALUE other ) {
+	// Creates a mpf_t pointer and loads self in it
+	mpf_t *f;
+	Data_Get_Struct(self, mpf_t, f);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPFloat) {
+				mpf_t *od;
+				Data_Get_Struct(other, mpf_t, od);
+				
+				if (mpf_cmp(*f, *od) > 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			double of = RFLOAT_VALUE(other);
+			
+			if (mpf_cmp_d(*f, of) > 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
+}
+
+// Less than (>)
+// {GMP::Float, Float} -> {TrueClass, FalseClass}
+static VALUE
+f_less_than_test( VALUE self, VALUE other ) {
+	// Creates a mpf_t pointer and loads self in it
+	mpf_t *f;
+	Data_Get_Struct(self, mpf_t, f);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPFloat) {
+				mpf_t *od;
+				Data_Get_Struct(other, mpf_t, od);
+				
+				if (mpf_cmp(*f, *od) < 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			double of = RFLOAT_VALUE(other);
+			
+			if (mpf_cmp_d(*f, of) < 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
+}
+
+// Greater than or equal to (>=)
+// {GMP::Float, Float} -> {TrueClass, FalseClass}
+static VALUE
+f_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
+	// Creates a mpf_t pointer and loads self in it
+	mpf_t *f;
+	Data_Get_Struct(self, mpf_t, f);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPFloat) {
+				mpf_t *od;
+				Data_Get_Struct(other, mpf_t, od);
+				
+				if (mpf_cmp(*f, *od) >= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			double of = RFLOAT_VALUE(other);
+			
+			if (mpf_cmp_d(*f, of) >= 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
+}
+
+// Less than or equal to (<=)
+// {GMP::Float, Float} -> {TrueClass, FalseClass}
+static VALUE
+f_less_than_or_equal_to_test( VALUE self, VALUE other ) {
+	// Creates a mpf_t pointer and loads self in it
+	mpf_t *f;
+	Data_Get_Struct(self, mpf_t, f);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPFloat) {
+				mpf_t *od;
+				Data_Get_Struct(other, mpf_t, od);
+				
+				if (mpf_cmp(*f, *od) <= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			double of = RFLOAT_VALUE(other);
+			
+			if (mpf_cmp_d(*f, of) <= 0)
+				return Qtrue;
+			else
+				return Qfalse;
+			
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
+}
+
+// Generic comparison (<=>)
+// {GMP::Float, Float} -> {Fixnum}
+static VALUE
+f_generic_comparison( VALUE self, VALUE other ) {
+	// Creates a mpf_t pointer and loads self in it
+	mpf_t *f;
+	Data_Get_Struct(self, mpf_t, f);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPFloat) {
+				mpf_t *od;
+				Data_Get_Struct(other, mpf_t, od);
+				
+				return INT2FIX(mpf_cmp(*f, *od));
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			double of = RFLOAT_VALUE(other);
+			
+			return INT2FIX(mpf_cmp_d(*f, of));
+			
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+	
+	// I'm guessing no compilers will complain about the lack of this?
+	// Anyhow, just in case...
+	return Qfalse;
+}
+//// end of comparison methods
+////////////////////////////////////////////////////////////////////
+
 ////////////////////////////////////////////////////////////////////
 //// Other methods
 // Sets the floating point precision for a specific number/object
@@ -365,6 +738,43 @@ f_get_precision( VALUE self, VALUE precision ) {
 	return LONG2FIX(longPrecision);
 }
 
+// Efficient swap
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}, {GMP::Float}
+static VALUE
+f_swap( VALUE self, VALUE other ) {
+	// Creates pointers to self's and other's mpf_t structures
+	mpf_t *f, *o;
+	
+	// Copies back the mpf_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(other, mpf_t, o);
+	
+	// Swaps the contents of self and other
+	mpf_swap(*f, *o);
+	
+	return Qnil;
+}
+
+static VALUE
+f_absolute( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *f, *r;
+	
+	// Creates a new object which will receive the result from the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	// Sets the result as the absolute value of self
+	mpf_abs(*r, *f);
+	
+	return result;
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
 
@@ -400,8 +810,59 @@ f_get_def_prec( VALUE klass ) {
 	
 	return LONG2FIX(result);
 }
+
+// Square root
+// {GMP::Float, Float} -> {GMP::Float}
+static VALUE
+f_sqrt_singleton( VALUE klass, VALUE radicand ) {
+	// Creates pointer to the result's mpf_t structure
+	mpf_t *r;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpf_t, r);
+	
+	// Decides what to do based on the radicand's type/class
+	switch (TYPE(radicand)) {
+		case T_DATA: {
+			if (rb_obj_class(radicand) == cGMPFloat) {
+				mpf_t *rd;
+				Data_Get_Struct(radicand, mpf_t, rd);
+				if (mpf_sgn(*rd) == -1)
+					rb_raise(rb_eRuntimeError, "radicand is negative");
+				mpf_sqrt(*r, *rd);
+			} else {
+				rb_raise(rb_eTypeError, "radicand's class is not supported");
+			}
+			break;
+		}
+		case T_FLOAT: {
+			mpf_t tempRafl;
+			mpf_init_set_d(tempRafl, NUM2DBL(radicand));
+			if (mpf_sgn(tempRafl) == -1)
+				rb_raise(rb_eRuntimeError, "radicand is negative");
+			mpf_sqrt(*r, tempRafl);
+			mpf_clear(tempRafl);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "radicand's class is not supported");
+		}
+	}
+	
+	return result;
+}
 //// end of singletons/class methods
 ////////////////////////////////////////////////////////////////////
+
+
+
+
 void
 Init_gmpf() {
 	// Defines the module GMP and class GMP::Float
@@ -414,21 +875,38 @@ Init_gmpf() {
 	
 	// Conversion methods
 	rb_define_method(cGMPFloat, "to_s", f_to_string, 0);
+	rb_define_method(cGMPFloat, "to_f", f_to_float, 0);
 	
 	// Binary operators
 	rb_define_method(cGMPFloat, "+", f_addition, 1);
 	rb_define_method(cGMPFloat, "-", f_subtraction, 1);
 	rb_define_method(cGMPFloat, "*", f_multiplication, 1);
+	rb_define_method(cGMPFloat, "/", f_division, 1);
+	rb_define_method(cGMPFloat, "**", f_power, 1);
 	
 	// Unary operators
 	rb_define_method(cGMPFloat, "+@", f_positive, 0);
 	rb_define_method(cGMPFloat, "-@", f_negation, 0);
 	
+	// Comparisons
+	rb_define_method(cGMPFloat, "==", f_equality_test, 1);
+	rb_define_method(cGMPFloat, ">", f_greater_than_test, 1);
+	rb_define_method(cGMPFloat, "<", f_less_than_test, 1);
+	rb_define_method(cGMPFloat, ">=", f_greater_than_or_equal_to_test, 1);
+	rb_define_method(cGMPFloat, "<=", f_less_than_or_equal_to_test, 1);
+	rb_define_method(cGMPFloat, "<=>", f_generic_comparison, 1);
+	
 	// Other methods
 	rb_define_method(cGMPFloat, "precision=", f_set_precision, 1);
 	rb_define_method(cGMPFloat, "precision", f_get_precision, 0);
+	rb_define_method(cGMPFloat, "swap", f_swap, 1);
+	rb_define_method(cGMPFloat, "abs", f_absolute, 0);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPFloat, "def_precision=", f_set_def_prec, 1);
 	rb_define_singleton_method(cGMPFloat, "def_precision", f_get_def_prec, 0);
+	rb_define_singleton_method(cGMPFloat, "sqrt", f_sqrt_singleton, 1);
+	
+	// Aliases
+	rb_define_alias(cGMPFloat, "magnitude", "abs");
 }

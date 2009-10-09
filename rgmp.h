@@ -1,3 +1,21 @@
+/*
+    rGMP is yet another GMP wrapper for Ruby
+    Copyright (C) 2009  Ralf Gunter
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "gmp.h"
 #include "ruby.h"
 
@@ -118,20 +136,34 @@ extern VALUE f_init(VALUE, VALUE*, VALUE);
 
 // Conversion methods
 extern VALUE f_to_string(VALUE);
+extern VALUE f_to_float(VALUE);
 
 // Binary arithmetical operators
 extern VALUE f_addition(VALUE, VALUE);
 extern VALUE f_subtraction(VALUE, VALUE);
 extern VALUE f_multiplication(VALUE, VALUE);
+extern VALUE f_division(VALUE, VALUE);
+extern VALUE f_power(VALUE, VALUE);
 
 // Unary arithmetical operators
 extern VALUE f_positive(VALUE);
 extern VALUE f_negation(VALUE);
 
+// Comparison methods
+extern VALUE f_equality_test(VALUE, VALUE);
+extern VALUE f_greater_than_test(VALUE, VALUE);
+extern VALUE f_less_than_test(VALUE, VALUE);
+extern VALUE f_greater_than_or_equal_to_test(VALUE, VALUE);
+extern VALUE f_less_than_or_equal_to_test(VALUE, VALUE);
+extern VALUE f_generic_comparison(VALUE, VALUE);
+
 // Other methods
 extern VALUE f_set_precision(VALUE, VALUE);
 extern VALUE f_get_precision(VALUE, VALUE);
+extern VALUE f_swap(VALUE, VALUE);
+extern VALUE f_absolute(VALUE, VALUE);
 
 // Singletons/Class methods
 extern VALUE f_set_def_prec(VALUE, VALUE);
 extern VALUE f_get_def_prec(VALUE);
+extern VALUE f_sqrt_singleton(VALUE);

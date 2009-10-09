@@ -16,4 +16,8 @@ Init_gmp() {
 	
 	// Load GMP::Float into the extension
 	Init_gmpf();
+	
+	// String containing the GMP version used to compile this
+	VALUE version = rb_str_new2(gmp_version);
+	rb_define_const(mGMP, "GMP_VERSION", version);
 }

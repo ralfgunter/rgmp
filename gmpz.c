@@ -717,16 +717,19 @@ z_equality_test( VALUE self, VALUE other ) {
 		}
 		case T_FIXNUM: {
 			signed long ol = FIX2LONG(other);
+			
 			if (mpz_cmp_si(*i, ol) == 0)
 				return Qtrue;
 			else
 				return Qfalse;
+			
 			break;
 		}
 		case T_BIGNUM: {
 			mpz_t tempOb;
 			VALUE str = rb_big2str(other, 10);
 			mpz_init_set_str(tempOb, StringValuePtr(str), 10);
+			
 			if (mpz_cmp(*i, tempOb) == 0) {
 				mpz_clear(tempOb);
 				return Qtrue;
@@ -734,6 +737,7 @@ z_equality_test( VALUE self, VALUE other ) {
 				mpz_clear(tempOb);
 				return Qfalse;
 			}
+			
 			break;
 		}
 		default: {
@@ -2155,9 +2159,9 @@ Init_gmpz() {
 	rb_define_singleton_method(cGMPInteger, "jacobi", z_jacobi_singleton, 2);
 
 	// Aliases
-	rb_define_method(cGMPInteger, "modulo", z_modulo, 1);
-	rb_define_method(cGMPInteger, "magnitude", z_absolute, 0);
-	rb_define_method(cGMPInteger, "to_int", z_to_integer, 0);
+	rb_define_alias(cGMPInteger, "modulo", "%");
+	rb_define_alias(cGMPInteger, "magnitude", "abs");
+	rb_define_alias(cGMPInteger, "to_int", "to_i");
 	// Whether or not this is a good idea is debatable, but for now...
 	rb_define_singleton_method(cGMPInteger, "legendre", z_jacobi_singleton, 2);
 }
