@@ -157,11 +157,18 @@ extern VALUE f_greater_than_or_equal_to_test(VALUE, VALUE);
 extern VALUE f_less_than_or_equal_to_test(VALUE, VALUE);
 extern VALUE f_generic_comparison(VALUE, VALUE);
 
+// Question-like methods
+extern VALUE f_integer(VALUE);
+
 // Other methods
 extern VALUE f_set_precision(VALUE, VALUE);
 extern VALUE f_get_precision(VALUE, VALUE);
 extern VALUE f_swap(VALUE, VALUE);
 extern VALUE f_absolute(VALUE, VALUE);
+extern VALUE f_relative_difference(VALUE, VALUE);
+extern VALUE f_ceil(VALUE);
+extern VALUE f_floor(VALUE);
+extern VALUE f_truncate(VALUE);
 
 // Singletons/Class methods
 extern VALUE f_set_def_prec(VALUE, VALUE);

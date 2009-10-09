@@ -703,6 +703,24 @@ f_generic_comparison( VALUE self, VALUE other ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Question-like methods
+// Is it an integer?
+// {} -> {TrueClass, FalseClass)
+static VALUE
+f_integer( VALUE self ) {
+	// Creates a mpf_t pointer and loads self into it
+	mpf_t *s;
+	Data_Get_Struct(self, mpf_t, s);
+	
+	if (mpf_integer_p(*s))
+		return Qtrue;
+	else
+		return Qfalse;
+}
+//// end of question-like methods
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Other methods
 // Sets the floating point precision for a specific number/object
 // {GMP::Integer}, {Fixnum, Bignum} -> {NilClass}
@@ -755,6 +773,8 @@ f_swap( VALUE self, VALUE other ) {
 	return Qnil;
 }
 
+// Absolute value
+// {} -> {GMP::Float}
 static VALUE
 f_absolute( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
@@ -772,6 +792,95 @@ f_absolute( VALUE self ) {
 	
 	// Sets the result as the absolute value of self
 	mpf_abs(*r, *f);
+	
+	return result;
+}
+
+// Relative difference ( |a - b|/a )
+// {GMP::Float, GMP::Float} -> {GMP::Float}
+static VALUE
+f_relative_difference( VALUE self, VALUE other ) {
+	// Creates pointers to self's, other's and result's mpf_t structures
+	mpf_t *f, *o, *r;
+	
+	// Creates a new object that will receive the result of the multiplication
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers from ruby to C
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(other, mpf_t, o);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	mpf_reldiff(*r, *f, *o);
+	
+	return result;
+}
+
+// Ceil (rounds up)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_ceil( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *f, *r;
+	
+	// Creates a new object which will receive the result from the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	mpf_ceil(*r, *f);
+	
+	return result;
+}
+
+// Floor (rounds down)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_floor( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *f, *r;
+	
+	// Creates a new object which will receive the result from the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	mpf_floor(*r, *f);
+	
+	return result;
+}
+
+// Truncate (rounds towards zero)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_truncate( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *f, *r;
+	
+	// Creates a new object which will receive the result from the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpf_t, f);
+	Data_Get_Struct(result, mpf_t, r);
+	
+	mpf_trunc(*r, *f);
 	
 	return result;
 }
@@ -896,11 +1005,18 @@ Init_gmpf() {
 	rb_define_method(cGMPFloat, "<=", f_less_than_or_equal_to_test, 1);
 	rb_define_method(cGMPFloat, "<=>", f_generic_comparison, 1);
 	
+	// Question-like methods
+	rb_define_method(cGMPFloat, "is_integer?", f_integer, 0);
+	
 	// Other methods
 	rb_define_method(cGMPFloat, "precision=", f_set_precision, 1);
 	rb_define_method(cGMPFloat, "precision", f_get_precision, 0);
 	rb_define_method(cGMPFloat, "swap", f_swap, 1);
 	rb_define_method(cGMPFloat, "abs", f_absolute, 0);
+	rb_define_method(cGMPFloat, "relative_diff", f_relative_difference, 1);
+	rb_define_method(cGMPFloat, "ceil", f_ceil, 0);
+	rb_define_method(cGMPFloat, "floor", f_floor, 0);
+	rb_define_method(cGMPFloat, "trunc", f_truncate, 0);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPFloat, "def_precision=", f_set_def_prec, 1);
