@@ -1153,6 +1153,72 @@ f_log10( VALUE klass, VALUE logarithmand ) {
 //// end of logarithm methods
 ////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////
+//// Exponentiation methods
+// Base E exponentiation
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_exp( VALUE klass, VALUE exponent ) {
+	// Creates pointer to the result's and logarithmand's mpfr_structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *e;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(exponent, mpfr_t, e);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_exp(*r, *e, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Base 2 exponentiation
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_exp2( VALUE klass, VALUE exponent ) {
+	// Creates pointer to the result's and logarithmand's mpfr_structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *e;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(exponent, mpfr_t, e);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_exp2(*r, *e, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Base 10 exponentiation
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_exp10( VALUE klass, VALUE exponent ) {
+	// Creates pointer to the result's and logarithmand's mpfr_structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *e;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(exponent, mpfr_t, e);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_exp10(*r, *e, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of logarithm methods
+////////////////////////////////////////////////////////////////////
+
+
+
 void
 Init_gmpf() {
 	// Defines the module GMP and class GMP::Float
@@ -1217,6 +1283,11 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "log", f_logn, 1);
 	rb_define_singleton_method(cGMPFloat, "log2", f_log2, 1);
 	rb_define_singleton_method(cGMPFloat, "log10", f_log10, 1);
+	
+	// Exponentiation methods
+	rb_define_singleton_method(cGMPFloat, "exp", f_exp, 1);
+	rb_define_singleton_method(cGMPFloat, "exp2", f_exp2, 1);
+	rb_define_singleton_method(cGMPFloat, "exp10", f_exp10, 1);
 #endif // MPFR
 
 	// Aliases

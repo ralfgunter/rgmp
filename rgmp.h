@@ -193,4 +193,9 @@ extern VALUE f_cosecant(VALUE, VALUE);
 extern VALUE f_logn(VALUE, VALUE);
 extern VALUE f_log2(VALUE, VALUE);
 extern VALUE f_log10(VALUE, VALUE);
+
+// Exponentiation methods
+extern VALUE f_exp(VALUE, VALUE);
+extern VALUE f_exp2(VALUE, VALUE);
+extern VALUE f_exp10(VALUE, VALUE);
 #endif
