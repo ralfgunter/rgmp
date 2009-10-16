@@ -126,17 +126,14 @@ f_to_float( VALUE self ) {
 static VALUE
 f_addition( VALUE self, VALUE summand ) {
 	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *f;
 	
-	// Creates a new object that will receive the result of the addition
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointers from ruby to C
+	// Loads self into *f
 	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	
+	// Inits the result
+	mpf_init(*r);
 	
 	// Decides what to do based on the summand's type/class
 	switch (TYPE(summand)) {
@@ -184,7 +181,7 @@ f_addition( VALUE self, VALUE summand ) {
 		}
 	}
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Subtraction (-)
@@ -192,17 +189,14 @@ f_addition( VALUE self, VALUE summand ) {
 static VALUE
 f_subtraction( VALUE self, VALUE subtraend ) {
 	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *f;
 	
-	// Creates a new object that will receive the result of the subtraction
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointers from ruby to C
+	// Loads self into *f
 	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	
+	// Inits the result
+	mpf_init(*r);
 	
 	// Decides what to do based on the subtraend's type/class
 	switch (TYPE(subtraend)) {
@@ -250,7 +244,7 @@ f_subtraction( VALUE self, VALUE subtraend ) {
 		}
 	}
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Multiplication (*)
@@ -258,17 +252,14 @@ f_subtraction( VALUE self, VALUE subtraend ) {
 static VALUE
 f_multiplication( VALUE self, VALUE multiplicand ) {
 	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *f;
 	
-	// Creates a new object that will receive the result of the multiplication
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointers from ruby to C
+	// Loads self into *f
 	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	
+	// Inits the result
+	mpf_init(*r);
 	
 	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(multiplicand)) {
@@ -312,7 +303,7 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 		}
 	}
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Division (/)
@@ -320,17 +311,14 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 static VALUE
 f_division( VALUE self, VALUE dividend ) {
 	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *f;
 	
-	// Creates a new object that will receive the result of the multiplication
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointers from ruby to C
+	// Loads self into *f
 	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	
+	// Inits the result
+	mpf_init(*r);
 	
 	// Decides what to do based on the dividend's type/class
 	switch (TYPE(dividend)) {
@@ -374,7 +362,7 @@ f_division( VALUE self, VALUE dividend ) {
 		}
 	}
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Exponentiation (**)
@@ -383,24 +371,21 @@ f_division( VALUE self, VALUE dividend ) {
 static VALUE
 f_power( VALUE self, VALUE exponent ) {
 	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *f;
 	
-	// Creates a new object that will receive the result of the multiplication
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointers from ruby to C
+	// Loads self into *f
 	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	
+	// Inits the result
+	mpf_init(*r);
 	
 	// GMP only supports positive integral exponents
 	if (!FIXNUM_P(exponent))
 		rb_raise(rb_eTypeError, "exponent must be a (positive) Fixnum");
 	mpf_pow_ui(*r, *f, FIX2LONG(exponent));
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of binary operator methods
 ////////////////////////////////////////////////////////////////////
@@ -980,133 +965,121 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 // Sine
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_sine( VALUE klass, VALUE number ) {
-	// Creates pointer to the result's mpf_t structure
-	mpfr_t *r, *n;
+f_sine( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
 	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpfr_t, r);
-	Data_Get_Struct(number, mpfr_t, n);
+	// Inits the result
+	mpfr_init(*r);
 	
-	mpfr_sin(*r, *n, GMP_RNDN);
+	// Does the calculation
+	mpfr_sin(*r, *a, GMP_RNDN);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Cossine
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_cossine( VALUE klass, VALUE number ) {
-	// Creates pointer to the result's mpf_t structure
-	mpfr_t *r, *n;
+f_cossine( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
 	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpfr_t, r);
-	Data_Get_Struct(number, mpfr_t, n);
+	// Inits the result
+	mpfr_init(*r);
 	
-	mpfr_cos(*r, *n, GMP_RNDN);
+	// Does the calculation
+	mpfr_cos(*r, *a, GMP_RNDN);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Tangent
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_tangent( VALUE klass, VALUE number ) {
-	// Creates pointer to the result's mpf_t structure
-	mpfr_t *r, *n;
+f_tangent( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
 	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpfr_t, r);
-	Data_Get_Struct(number, mpfr_t, n);
+	// Inits the result
+	mpfr_init(*r);
 	
-	mpfr_tan(*r, *n, GMP_RNDN);
+	// Does the calculation
+	mpfr_tan(*r, *a, GMP_RNDN);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Cotangent
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_cotangent( VALUE klass, VALUE number ) {
-	// Creates pointer to the result's mpf_t structure
-	mpfr_t *r, *n;
+f_cotangent( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
 	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpfr_t, r);
-	Data_Get_Struct(number, mpfr_t, n);
+	// Inits the result
+	mpfr_init(*r);
 	
-	mpfr_cot(*r, *n, GMP_RNDN);
+	// Does the calculation
+	mpfr_cot(*r, *a, GMP_RNDN);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Secant
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_secant( VALUE klass, VALUE number ) {
-	// Creates pointer to the result's mpf_t structure
-	mpfr_t *r, *n;
+f_secant( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
 	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpfr_t, r);
-	Data_Get_Struct(number, mpfr_t, n);
+	// Inits the result
+	mpfr_init(*r);
 	
-	mpfr_sec(*r, *n, GMP_RNDN);
+	// Does the calculation
+	mpfr_sec(*r, *a, GMP_RNDN);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Cosecant
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_cosecant( VALUE klass, VALUE number ) {
-	// Creates pointer to the result's mpf_t structure
-	mpfr_t *r, *n;
+f_cosecant( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
 	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpfr_t, r);
-	Data_Get_Struct(number, mpfr_t, n);
+	// Inits the result
+	mpfr_init(*r);
 	
-	mpfr_sec(*r, *n, GMP_RNDN);
+	// Does the calculation
+	mpfr_sec(*r, *a, GMP_RNDN);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of trigonometric functions
 ////////////////////////////////////////////////////////////////////
