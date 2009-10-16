@@ -19,6 +19,11 @@
 #include "gmp.h"
 #include "ruby.h"
 
+#ifdef MPFR
+#include "mpfr.h"
+#include "mpf2mpfr.h"
+#endif
+
 static VALUE mGMP;
 static VALUE cGMPFloat;
 
@@ -969,7 +974,143 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 //// end of singletons/class methods
 ////////////////////////////////////////////////////////////////////
 
+#ifdef MPFR
+////////////////////////////////////////////////////////////////////
+//// Trigonometric functions
+// Sine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_sine( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's mpf_t structure
+	mpfr_t *r, *n;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpfr_t, r);
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	mpfr_sin(*r, *n, GMP_RNDN);
+	
+	return result;
+}
 
+// Cossine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_cossine( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's mpf_t structure
+	mpfr_t *r, *n;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpfr_t, r);
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	mpfr_cos(*r, *n, GMP_RNDN);
+	
+	return result;
+}
+
+// Tangent
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_tangent( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's mpf_t structure
+	mpfr_t *r, *n;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpfr_t, r);
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	mpfr_tan(*r, *n, GMP_RNDN);
+	
+	return result;
+}
+
+// Cotangent
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_cotangent( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's mpf_t structure
+	mpfr_t *r, *n;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpfr_t, r);
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	mpfr_cot(*r, *n, GMP_RNDN);
+	
+	return result;
+}
+
+// Secant
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_secant( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's mpf_t structure
+	mpfr_t *r, *n;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpfr_t, r);
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	mpfr_sec(*r, *n, GMP_RNDN);
+	
+	return result;
+}
+
+// Cosecant
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_cosecant( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's mpf_t structure
+	mpfr_t *r, *n;
+	
+	// Creates a new object that will receive the result of the operation
+	VALUE argv[] = { rb_float_new(0.0) };
+	ID class_id = rb_intern("Float");
+	VALUE class = rb_const_get(mGMP, class_id);
+	VALUE result = rb_class_new_instance(1, argv, class);
+	
+	// Copies back the mpf_t pointer from ruby to C
+	Data_Get_Struct(result, mpfr_t, r);
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	mpfr_sec(*r, *n, GMP_RNDN);
+	
+	return result;
+}
+//// end of trigonometric functions
+////////////////////////////////////////////////////////////////////
+#endif // MPFR
 
 
 void
@@ -1023,6 +1164,16 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "def_precision", f_get_def_prec, 0);
 	rb_define_singleton_method(cGMPFloat, "sqrt", f_sqrt_singleton, 1);
 	
+#ifdef MPFR
+	// Trigonometric functions
+	rb_define_singleton_method(cGMPFloat, "sin", f_sine, 1);
+	rb_define_singleton_method(cGMPFloat, "cos", f_cossine, 1);
+	rb_define_singleton_method(cGMPFloat, "tan", f_tangent, 1);
+	rb_define_singleton_method(cGMPFloat, "cot", f_cotangent, 1);
+	rb_define_singleton_method(cGMPFloat, "sec", f_secant, 1);
+	rb_define_singleton_method(cGMPFloat, "csc", f_cosecant, 1);
+#endif // MPFR
+
 	// Aliases
 	rb_define_alias(cGMPFloat, "magnitude", "abs");
 }

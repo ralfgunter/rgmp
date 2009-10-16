@@ -19,6 +19,11 @@
 #include "gmp.h"
 #include "ruby.h"
 
+#ifdef MPFR
+#include "mpfr.h"
+#include "mpf2mpfr.h"
+#endif
+
 extern VALUE mGMP;
 extern VALUE cGMPInteger, cGMPFloat;
 
@@ -174,3 +179,13 @@ extern VALUE f_truncate(VALUE);
 extern VALUE f_set_def_prec(VALUE, VALUE);
 extern VALUE f_get_def_prec(VALUE);
 extern VALUE f_sqrt_singleton(VALUE);
+
+#ifdef MPFR
+// Trigonometric functions
+extern VALUE f_sine(VALUE, VALUE);
+extern VALUE f_cossine(VALUE, VALUE);
+extern VALUE f_tangent(VALUE, VALUE);
+extern VALUE f_cotangent(VALUE, VALUE);
+extern VALUE f_secant(VALUE, VALUE);
+extern VALUE f_cosecant(VALUE, VALUE);
+#endif
