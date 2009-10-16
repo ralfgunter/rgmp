@@ -1149,6 +1149,70 @@ f_atangent( VALUE klass, VALUE trig_value ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Inverse hyperbolic trigonometry functions
+// Inverse hyperbolic sine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_ahsine( VALUE klass, VALUE trig_value ) {
+	// Creates pointer to the result's and trig_value's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the trig_value from Ruby
+	Data_Get_Struct(trig_value, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_asinh(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Inverse hyperbolic cossine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_ahcossine( VALUE klass, VALUE trig_value ) {
+	// Creates pointer to the result's and trig_value's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the trig_value from Ruby
+	Data_Get_Struct(trig_value, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_acosh(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Inverse hyperbolic tangent
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_ahtangent( VALUE klass, VALUE trig_value ) {
+	// Creates pointer to the result's and trig_value's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the trig_value from Ruby
+	Data_Get_Struct(trig_value, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_atanh(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of inverse hyperbolic trigonometry functions
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Hyperbolic trigonometry functions
 // Hyperbolic sine
 // {GMP::Float} -> {GMP::Float}
@@ -1479,6 +1543,11 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "asin", f_asine, 1);
 	rb_define_singleton_method(cGMPFloat, "acos", f_acossine, 1);
 	rb_define_singleton_method(cGMPFloat, "atan", f_atangent, 1);
+	
+	// Inverse hyperbolic trigonometry functions
+	rb_define_singleton_method(cGMPFloat, "asinh", f_ahsine, 1);
+	rb_define_singleton_method(cGMPFloat, "acosh", f_ahcossine, 1);
+	rb_define_singleton_method(cGMPFloat, "atanh", f_ahtangent, 1);
 	
 	// Logarithm methods
 	rb_define_singleton_method(cGMPFloat, "log", f_logn, 1);

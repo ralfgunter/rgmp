@@ -202,6 +202,11 @@ extern VALUE f_asine(VALUE, VALUE);
 extern VALUE f_acossine(VALUE, VALUE);
 extern VALUE f_atangent(VALUE, VALUE);
 
+// Inverse hyperbolic trigonometry functions
+extern VALUE f_ahsine(VALUE, VALUE);
+extern VALUE f_ahcossine(VALUE, VALUE);
+extern VALUE f_ahtangent(VALUE, VALUE);
+
 // Logarithm methods
 extern VALUE f_logn(VALUE, VALUE);
 extern VALUE f_log2(VALUE, VALUE);
