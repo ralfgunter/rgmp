@@ -25,7 +25,7 @@
 #endif
 
 extern VALUE mGMP;
-extern VALUE cGMPInteger, cGMPFloat;
+extern VALUE cGMPInteger, cGMPRational, cGMPFloat;
 
 
 /* GMP::Integer method prototyping */
@@ -121,6 +121,23 @@ extern VALUE z_invert_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_lcm_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_gcd_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_jacobi_singleton(VALUE, VALUE, VALUE);
+
+
+
+/* GMP::Rational method prototyping */
+
+// Initialization function
+extern void Init_gmpq();
+
+// Garbage collection
+extern VALUE rational_mark(mpq_t*);
+extern VALUE rational_free(mpq_t*);
+
+// Object allocation
+extern VALUE rational_allocate(VALUE);
+
+// Class constructor
+extern VALUE q_init(VALUE);
 
 
 

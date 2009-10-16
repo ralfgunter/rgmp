@@ -1,7 +1,7 @@
 #include "rgmp.h"
 
 VALUE mGMP;
-VALUE cGMPInteger, cGMPFloat;
+VALUE cGMPInteger, cGMPRational, cGMPFloat;
 VALUE gmpversion, mpfrversion;
 
 void
@@ -9,10 +9,14 @@ Init_gmp() {
 	mGMP = rb_define_module("GMP");
 	
 	cGMPInteger = rb_define_class_under(mGMP, "Integer", rb_cObject);
+	cGMPRational = rb_define_class_under(mGMP, "Rational", rb_cObject);
 	cGMPFloat = rb_define_class_under(mGMP, "Float", rb_cObject);
 	
 	// Loads GMP::Integer into the extension
 	Init_gmpz();
+	
+	// Loads GMP::Rational into the extension
+	Init_gmpq();
 	
 	// Loads GMP::Float into the extension
 	Init_gmpf();
