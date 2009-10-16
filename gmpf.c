@@ -1077,7 +1077,7 @@ f_cosecant( VALUE klass, VALUE angle ) {
 	mpfr_init(*r);
 	
 	// Does the calculation
-	mpfr_sec(*r, *a, GMP_RNDN);
+	mpfr_csc(*r, *a, GMP_RNDN);
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
@@ -1089,13 +1089,13 @@ f_cosecant( VALUE klass, VALUE angle ) {
 // Inverse sine
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_asine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+f_asine( VALUE klass, VALUE trig_value ) {
+	// Creates pointer to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
-	// Loads the angle from Ruby
-	Data_Get_Struct(angle, mpfr_t, a);
+	// Loads the trig_value from Ruby
+	Data_Get_Struct(trig_value, mpfr_t, a);
 	
 	// Inits the result
 	mpfr_init(*r);
@@ -1109,13 +1109,13 @@ f_asine( VALUE klass, VALUE angle ) {
 // Inverse cossine
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_acossine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+f_acossine( VALUE klass, VALUE trig_value ) {
+	// Creates pointer to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
-	// Loads the angle from Ruby
-	Data_Get_Struct(angle, mpfr_t, a);
+	// Loads the trig_value from Ruby
+	Data_Get_Struct(trig_value, mpfr_t, a);
 	
 	// Inits the result
 	mpfr_init(*r);
@@ -1129,7 +1129,31 @@ f_acossine( VALUE klass, VALUE angle ) {
 // Inverse tangent
 // {GMP::Float} -> {GMP::Float}
 static VALUE
-f_atangent( VALUE klass, VALUE angle ) {
+f_atangent( VALUE klass, VALUE trig_value ) {
+	// Creates pointer to the result's and trig_value's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the trig_value from Ruby
+	Data_Get_Struct(trig_value, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_atan(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of inverse trigonometric functions
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+//// Hyperbolic trigonometry functions
+// Hyperbolic sine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_hsine( VALUE klass, VALUE angle ) {
 	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
@@ -1141,11 +1165,111 @@ f_atangent( VALUE klass, VALUE angle ) {
 	mpfr_init(*r);
 	
 	// Does the calculation
-	mpfr_atan(*r, *a, GMP_RNDN);
+	mpfr_sinh(*r, *a, GMP_RNDN);
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
-//// end of inverse trigonometric functions
+
+// Hyperbolic cossine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_hcossine( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_cosh(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Hyperbolic tangent
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_htangent( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_tanh(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Hyperbolic cotangent
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_hcotangent( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_coth(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Hyperbolic secant
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_hsecant( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_sech(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Hyperbolic cosecant
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_hcosecant( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_csch(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of hyperbolic trigonometric functions
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
@@ -1342,6 +1466,14 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "cot", f_cotangent, 1);
 	rb_define_singleton_method(cGMPFloat, "sec", f_secant, 1);
 	rb_define_singleton_method(cGMPFloat, "csc", f_cosecant, 1);
+	
+	// Hyperbolic trigonometry functions
+	rb_define_singleton_method(cGMPFloat, "sinh", f_hsine, 1);
+	rb_define_singleton_method(cGMPFloat, "cosh", f_hcossine, 1);
+	rb_define_singleton_method(cGMPFloat, "tanh", f_htangent, 1);
+	rb_define_singleton_method(cGMPFloat, "coth", f_hcotangent, 1);
+	rb_define_singleton_method(cGMPFloat, "sech", f_hsecant, 1);
+	rb_define_singleton_method(cGMPFloat, "csch", f_hcosecant, 1);
 	
 	// Inverse trigonometric functions
 	rb_define_singleton_method(cGMPFloat, "asin", f_asine, 1);

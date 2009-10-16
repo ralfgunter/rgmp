@@ -189,6 +189,14 @@ extern VALUE f_cotangent(VALUE, VALUE);
 extern VALUE f_secant(VALUE, VALUE);
 extern VALUE f_cosecant(VALUE, VALUE);
 
+// Hyperbolic trigonometry functions
+extern VALUE f_hsine(VALUE, VALUE);
+extern VALUE f_hcossine(VALUE, VALUE);
+extern VALUE f_htangent(VALUE, VALUE);
+extern VALUE f_hcotangent(VALUE, VALUE);
+extern VALUE f_hsecant(VALUE, VALUE);
+extern VALUE f_hcosecant(VALUE, VALUE);
+
 // Inverse trigonometric functions
 extern VALUE f_asine(VALUE, VALUE);
 extern VALUE f_acossine(VALUE, VALUE);
