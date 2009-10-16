@@ -966,7 +966,7 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_sine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structure
+	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -986,7 +986,7 @@ f_sine( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_cossine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structure
+	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1006,7 +1006,7 @@ f_cossine( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_tangent( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structure
+	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1026,7 +1026,7 @@ f_tangent( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_cotangent( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structure
+	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1046,7 +1046,7 @@ f_cotangent( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_secant( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structure
+	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1066,7 +1066,7 @@ f_secant( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_cosecant( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structure
+	// Creates pointer to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1083,8 +1083,75 @@ f_cosecant( VALUE klass, VALUE angle ) {
 }
 //// end of trigonometric functions
 ////////////////////////////////////////////////////////////////////
-#endif // MPFR
 
+////////////////////////////////////////////////////////////////////
+//// Logarithm methods
+// Natural logarithm
+// {GMP::Float} -> {GMP::Float}
+// TODO: check the variable naming
+static VALUE
+f_logn( VALUE klass, VALUE logarithmand ) {
+	// Creates pointer to the result's and logarithmand's mpfr_structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *l;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(logarithmand, mpfr_t, l);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_log(*r, *l, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Base 2 logarithm
+// {GMP::Float} -> {GMP::Float}
+// TODO: check the variable naming
+static VALUE
+f_log2( VALUE klass, VALUE logarithmand ) {
+	// Creates pointer to the result's and logarithmand's mpfr_structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *l;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(logarithmand, mpfr_t, l);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_log2(*r, *l, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Base 10 logarithm
+// {GMP::Float} -> {GMP::Float}
+// TODO: check the variable naming
+static VALUE
+f_log10( VALUE klass, VALUE logarithmand ) {
+	// Creates pointer to the result's and logarithmand's mpfr_structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *l;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(logarithmand, mpfr_t, l);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_log10(*r, *l, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+#endif // MPFR
+//// end of logarithm methods
+////////////////////////////////////////////////////////////////////
 
 void
 Init_gmpf() {
@@ -1145,6 +1212,11 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "cot", f_cotangent, 1);
 	rb_define_singleton_method(cGMPFloat, "sec", f_secant, 1);
 	rb_define_singleton_method(cGMPFloat, "csc", f_cosecant, 1);
+	
+	// Logarithm methods
+	rb_define_singleton_method(cGMPFloat, "log", f_logn, 1);
+	rb_define_singleton_method(cGMPFloat, "log2", f_log2, 1);
+	rb_define_singleton_method(cGMPFloat, "log10", f_log10, 1);
 #endif // MPFR
 
 	// Aliases

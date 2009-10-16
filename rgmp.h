@@ -188,4 +188,9 @@ extern VALUE f_tangent(VALUE, VALUE);
 extern VALUE f_cotangent(VALUE, VALUE);
 extern VALUE f_secant(VALUE, VALUE);
 extern VALUE f_cosecant(VALUE, VALUE);
+
+// Logarithm methods
+extern VALUE f_logn(VALUE, VALUE);
+extern VALUE f_log2(VALUE, VALUE);
+extern VALUE f_log10(VALUE, VALUE);
 #endif
