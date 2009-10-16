@@ -404,22 +404,19 @@ f_positive( VALUE self ) {
 static VALUE
 f_negation( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *f;
 	
-	// Creates a new object that will receive the result of the subtraction
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointers from ruby to C
+	// Loads self into *f
 	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	
+	// Inits the result
+	mpf_init(*r);
 	
 	// Negates i, and copies the result to r
 	mpf_neg(*r, *f);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of unary operator methods
 ////////////////////////////////////////////////////////////////////
@@ -767,23 +764,20 @@ f_swap( VALUE self, VALUE other ) {
 // {} -> {GMP::Float}
 static VALUE
 f_absolute( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	// Creates pointer to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
 	
-	// Creates a new object which will receive the result from the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
 	
-	// Copies back the mpf_t pointers wrapped in ruby data objects
-	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	// Inits the result
+	mpf_init(*r);
 	
 	// Sets the result as the absolute value of self
-	mpf_abs(*r, *f);
+	mpf_abs(*r, *s);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Relative difference ( |a - b|/a )
@@ -791,88 +785,78 @@ f_absolute( VALUE self ) {
 static VALUE
 f_relative_difference( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpf_t structures
-	mpf_t *f, *o, *r;
-	
-	// Creates a new object that will receive the result of the multiplication
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	mpf_t *f, *o;
+	mpf_t *r = malloc(sizeof(*r));
 	
 	// Copies back the mpf_t pointers from ruby to C
 	Data_Get_Struct(self, mpf_t, f);
 	Data_Get_Struct(other, mpf_t, o);
-	Data_Get_Struct(result, mpf_t, r);
 	
+	// Inits the result
+	mpf_init(*r);
+	
+	// Does the calculation
 	mpf_reldiff(*r, *f, *o);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Ceil (rounds up)
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_ceil( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	// Creates pointer to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
 	
-	// Creates a new object which will receive the result from the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
 	
-	// Copies back the mpf_t pointers wrapped in ruby data objects
-	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	// Inits the result
+	mpf_init(*r);
 	
-	mpf_ceil(*r, *f);
+	mpf_ceil(*r, *s);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Floor (rounds down)
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_floor( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+	// Creates pointer to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
 	
-	// Creates a new object which will receive the result from the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
 	
-	// Copies back the mpf_t pointers wrapped in ruby data objects
-	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	// Inits the result
+	mpf_init(*r);
 	
-	mpf_floor(*r, *f);
+	mpf_floor(*r, *s);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
 // Truncate (rounds towards zero)
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_truncate( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *f, *r;
+
+	// Creates pointer to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
 	
-	// Creates a new object which will receive the result from the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
 	
-	// Copies back the mpf_t pointers wrapped in ruby data objects
-	Data_Get_Struct(self, mpf_t, f);
-	Data_Get_Struct(result, mpf_t, r);
+	// Inits the result
+	mpf_init(*r);
 	
-	mpf_trunc(*r, *f);
+	mpf_trunc(*r, *s);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
@@ -914,17 +898,11 @@ f_get_def_prec( VALUE klass ) {
 // {GMP::Float, Float} -> {GMP::Float}
 static VALUE
 f_sqrt_singleton( VALUE klass, VALUE radicand ) {
-	// Creates pointer to the result's mpf_t structure
-	mpf_t *r;
+	// Creates pointers to the result's mpf_t structure
+	mpf_t *r = malloc(sizeof(*r));
 	
-	// Creates a new object that will receive the result of the operation
-	VALUE argv[] = { rb_float_new(0.0) };
-	ID class_id = rb_intern("Float");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpf_t pointer from ruby to C
-	Data_Get_Struct(result, mpf_t, r);
+	// Inits the result
+	mpf_init(*r);
 	
 	// Decides what to do based on the radicand's type/class
 	switch (TYPE(radicand)) {
@@ -954,7 +932,7 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 		}
 	}
 	
-	return result;
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of singletons/class methods
 ////////////////////////////////////////////////////////////////////
