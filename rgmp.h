@@ -189,6 +189,11 @@ extern VALUE f_cotangent(VALUE, VALUE);
 extern VALUE f_secant(VALUE, VALUE);
 extern VALUE f_cosecant(VALUE, VALUE);
 
+// Inverse trigonometric functions
+extern VALUE f_asine(VALUE, VALUE);
+extern VALUE f_acossine(VALUE, VALUE);
+extern VALUE f_atangent(VALUE, VALUE);
+
 // Logarithm methods
 extern VALUE f_logn(VALUE, VALUE);
 extern VALUE f_log2(VALUE, VALUE);

@@ -1085,6 +1085,70 @@ f_cosecant( VALUE klass, VALUE angle ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Inverse trigonometric functions
+// Inverse sine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_asine( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_asin(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Inverse cossine
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_acossine( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_acos(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Inverse tangent
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_atangent( VALUE klass, VALUE angle ) {
+	// Creates pointer to the result's and angle's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_atan(*r, *a, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of inverse trigonometric functions
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Logarithm methods
 // Natural logarithm
 // {GMP::Float} -> {GMP::Float}
@@ -1159,7 +1223,7 @@ f_log10( VALUE klass, VALUE logarithmand ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_exp( VALUE klass, VALUE exponent ) {
-	// Creates pointer to the result's and logarithmand's mpfr_structures
+	// Creates pointer to the result's and exponent's mpfr_structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *e;
 	
@@ -1179,7 +1243,7 @@ f_exp( VALUE klass, VALUE exponent ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_exp2( VALUE klass, VALUE exponent ) {
-	// Creates pointer to the result's and logarithmand's mpfr_structures
+	// Creates pointer to the result's and exponent's mpfr_structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *e;
 	
@@ -1199,7 +1263,7 @@ f_exp2( VALUE klass, VALUE exponent ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_exp10( VALUE klass, VALUE exponent ) {
-	// Creates pointer to the result's and logarithmand's mpfr_structures
+	// Creates pointer to the result's and exponent's mpfr_structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *e;
 	
@@ -1278,6 +1342,11 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "cot", f_cotangent, 1);
 	rb_define_singleton_method(cGMPFloat, "sec", f_secant, 1);
 	rb_define_singleton_method(cGMPFloat, "csc", f_cosecant, 1);
+	
+	// Inverse trigonometric functions
+	rb_define_singleton_method(cGMPFloat, "asin", f_asine, 1);
+	rb_define_singleton_method(cGMPFloat, "acos", f_acossine, 1);
+	rb_define_singleton_method(cGMPFloat, "atan", f_atangent, 1);
 	
 	// Logarithm methods
 	rb_define_singleton_method(cGMPFloat, "log", f_logn, 1);
