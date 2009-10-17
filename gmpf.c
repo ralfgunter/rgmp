@@ -764,7 +764,7 @@ f_swap( VALUE self, VALUE other ) {
 // {} -> {GMP::Float}
 static VALUE
 f_absolute( VALUE self ) {
-	// Creates pointer to self's and the result's mpf_t structures
+	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
 	mpf_t *s;
 	
@@ -805,7 +805,7 @@ f_relative_difference( VALUE self, VALUE other ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_ceil( VALUE self ) {
-	// Creates pointer to self's and the result's mpf_t structures
+	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
 	mpf_t *s;
 	
@@ -824,7 +824,7 @@ f_ceil( VALUE self ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_floor( VALUE self ) {
-	// Creates pointer to self's and the result's mpf_t structures
+	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
 	mpf_t *s;
 	
@@ -843,8 +843,7 @@ f_floor( VALUE self ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_truncate( VALUE self ) {
-
-	// Creates pointer to self's and the result's mpf_t structures
+	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
 	mpf_t *s;
 	
@@ -898,7 +897,7 @@ f_get_def_prec( VALUE klass ) {
 // {GMP::Float, Float} -> {GMP::Float}
 static VALUE
 f_sqrt_singleton( VALUE klass, VALUE radicand ) {
-	// Creates pointers to the result's mpf_t structure
+	// Creates pointer to the result's mpf_t structure
 	mpf_t *r = malloc(sizeof(*r));
 	
 	// Inits the result
@@ -944,7 +943,7 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_sine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -964,7 +963,7 @@ f_sine( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_cossine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -984,7 +983,7 @@ f_cossine( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_tangent( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1004,7 +1003,7 @@ f_tangent( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_cotangent( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1024,7 +1023,7 @@ f_cotangent( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_secant( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1044,7 +1043,7 @@ f_secant( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_cosecant( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1068,7 +1067,7 @@ f_cosecant( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_asine( VALUE klass, VALUE trig_value ) {
-	// Creates pointer to the result's and trig_value's mpfr_t structures
+	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1088,7 +1087,7 @@ f_asine( VALUE klass, VALUE trig_value ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_acossine( VALUE klass, VALUE trig_value ) {
-	// Creates pointer to the result's and trig_value's mpfr_t structures
+	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1108,7 +1107,7 @@ f_acossine( VALUE klass, VALUE trig_value ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_atangent( VALUE klass, VALUE trig_value ) {
-	// Creates pointer to the result's and trig_value's mpfr_t structures
+	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1132,7 +1131,7 @@ f_atangent( VALUE klass, VALUE trig_value ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_ahsine( VALUE klass, VALUE trig_value ) {
-	// Creates pointer to the result's and trig_value's mpfr_t structures
+	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1152,7 +1151,7 @@ f_ahsine( VALUE klass, VALUE trig_value ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_ahcossine( VALUE klass, VALUE trig_value ) {
-	// Creates pointer to the result's and trig_value's mpfr_t structures
+	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1172,7 +1171,7 @@ f_ahcossine( VALUE klass, VALUE trig_value ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_ahtangent( VALUE klass, VALUE trig_value ) {
-	// Creates pointer to the result's and trig_value's mpfr_t structures
+	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1196,7 +1195,7 @@ f_ahtangent( VALUE klass, VALUE trig_value ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_hsine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1216,7 +1215,7 @@ f_hsine( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_hcossine( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1236,7 +1235,7 @@ f_hcossine( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_htangent( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1256,7 +1255,7 @@ f_htangent( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_hcotangent( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1276,7 +1275,7 @@ f_hcotangent( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_hsecant( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1296,7 +1295,7 @@ f_hsecant( VALUE klass, VALUE angle ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_hcosecant( VALUE klass, VALUE angle ) {
-	// Creates pointer to the result's and angle's mpfr_t structures
+	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *a;
 	
@@ -1321,7 +1320,7 @@ f_hcosecant( VALUE klass, VALUE angle ) {
 // TODO: check the variable naming
 static VALUE
 f_logn( VALUE klass, VALUE logarithmand ) {
-	// Creates pointer to the result's and logarithmand's mpfr_structures
+	// Creates pointers to the result's and logarithmand's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *l;
 	
@@ -1342,7 +1341,7 @@ f_logn( VALUE klass, VALUE logarithmand ) {
 // TODO: check the variable naming
 static VALUE
 f_log2( VALUE klass, VALUE logarithmand ) {
-	// Creates pointer to the result's and logarithmand's mpfr_structures
+	// Creates pointers to the result's and logarithmand's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *l;
 	
@@ -1363,7 +1362,7 @@ f_log2( VALUE klass, VALUE logarithmand ) {
 // TODO: check the variable naming
 static VALUE
 f_log10( VALUE klass, VALUE logarithmand ) {
-	// Creates pointer to the result's and logarithmand's mpfr_structures
+	// Creates pointers to the result's and logarithmand's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *l;
 	
@@ -1389,11 +1388,11 @@ f_log10( VALUE klass, VALUE logarithmand ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_exp( VALUE klass, VALUE exponent ) {
-	// Creates pointer to the result's and exponent's mpfr_structures
+	// Creates pointers to the result's and exponent's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *e;
 	
-	// Loads the logarithmand from Ruby
+	// Loads the exponent from Ruby
 	Data_Get_Struct(exponent, mpfr_t, e);
 	
 	// Inits the result;
@@ -1409,11 +1408,11 @@ f_exp( VALUE klass, VALUE exponent ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_exp2( VALUE klass, VALUE exponent ) {
-	// Creates pointer to the result's and exponent's mpfr_structures
+	// Creates pointers to the result's and exponent's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *e;
 	
-	// Loads the logarithmand from Ruby
+	// Loads the exponent from Ruby
 	Data_Get_Struct(exponent, mpfr_t, e);
 	
 	// Inits the result;
@@ -1429,11 +1428,11 @@ f_exp2( VALUE klass, VALUE exponent ) {
 // {GMP::Float} -> {GMP::Float}
 static VALUE
 f_exp10( VALUE klass, VALUE exponent ) {
-	// Creates pointer to the result's and exponent's mpfr_structures
+	// Creates pointers to the result's and exponent's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
 	mpfr_t *e;
 	
-	// Loads the logarithmand from Ruby
+	// Loads the exponent from Ruby
 	Data_Get_Struct(exponent, mpfr_t, e);
 	
 	// Inits the result;
@@ -1445,6 +1444,235 @@ f_exp10( VALUE klass, VALUE exponent ) {
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of logarithm methods
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+//// Bessel functions
+// Of the first kind and order 0
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_bessel_first_0( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_j0(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Of the first kind and order 1
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_bessel_first_1( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_j1(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Of the first kind and order n
+// {GMP::Float}, {Fixnum} -> {GMP::Float}
+static VALUE
+f_bessel_first_n( VALUE klass, VALUE number, VALUE order ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	long o;
+	mpfr_t *n;
+	
+	// Loads both the number and the order from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	o = FIX2LONG(order);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_jn(*r, o, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Of the second kind and order 0
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_bessel_second_0( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_y0(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Of the second kind and order 1
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_bessel_second_1( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_y1(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Of the second kind and order n
+// {GMP::Float}, {Fixnum} -> {GMP::Float}
+static VALUE
+f_bessel_second_n( VALUE klass, VALUE number, VALUE order ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	long o;
+	mpfr_t *n;
+	
+	// Loads both the number and the order from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	o = FIX2LONG(order);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_yn(*r, o, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of bessel functions
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+//// Other methods
+// Factorial
+// {Fixnum} -> {GMP::Float}
+static VALUE
+f_factorial( VALUE klass, VALUE base ) {
+	// Creates pointer to the result's mpfr_t structure
+	mpfr_t *r = malloc(sizeof(*r));
+	unsigned long b = FIX2LONG(base);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_fac_ui(*r, b, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Exponential integral of the input
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_exp_integral( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_eint(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Dilogarithm
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_dilogarithm( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_li2(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Euler gamma function
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_gamma( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_gamma(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Riemann zeta function
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_zeta( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_zeta(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of other methods
 ////////////////////////////////////////////////////////////////////
 
 
@@ -1536,6 +1764,21 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "exp", f_exp, 1);
 	rb_define_singleton_method(cGMPFloat, "exp2", f_exp2, 1);
 	rb_define_singleton_method(cGMPFloat, "exp10", f_exp10, 1);
+	
+	// Bessel functions
+	rb_define_singleton_method(cGMPFloat, "j0", f_bessel_first_0, 1);
+	rb_define_singleton_method(cGMPFloat, "j1", f_bessel_first_1, 1);
+	rb_define_singleton_method(cGMPFloat, "jn", f_bessel_first_n, 2);
+	rb_define_singleton_method(cGMPFloat, "y0", f_bessel_second_0, 1);
+	rb_define_singleton_method(cGMPFloat, "y1", f_bessel_second_1, 1);
+	rb_define_singleton_method(cGMPFloat, "yn", f_bessel_second_n, 2);
+	
+	// Other methods
+	rb_define_singleton_method(cGMPFloat, "fac", f_factorial, 1);
+	rb_define_singleton_method(cGMPFloat, "eint", f_exp_integral, 1);
+	rb_define_singleton_method(cGMPFloat, "li2", f_dilogarithm, 1);
+	rb_define_singleton_method(cGMPFloat, "gamma", f_gamma, 1);
+	rb_define_singleton_method(cGMPFloat, "zeta", f_zeta, 1);
 #endif // MPFR
 
 	// Aliases

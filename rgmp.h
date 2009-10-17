@@ -233,4 +233,19 @@ extern VALUE f_log10(VALUE, VALUE);
 extern VALUE f_exp(VALUE, VALUE);
 extern VALUE f_exp2(VALUE, VALUE);
 extern VALUE f_exp10(VALUE, VALUE);
+
+// Bessel functions
+extern VALUE f_bessel_first_0(VALUE, VALUE);
+extern VALUE f_bessel_first_1(VALUE, VALUE);
+extern VALUE f_bessel_first_n(VALUE, VALUE, VALUE);
+extern VALUE f_bessel_second_0(VALUE, VALUE);
+extern VALUE f_bessel_second_1(VALUE, VALUE);
+extern VALUE f_bessel_second_n(VALUE, VALUE, VALUE);
+
+// Other methods
+extern VALUE f_factorial(VALUE, VALUE);
+extern VALUE f_exp_integral(VALUE, VALUE);
+extern VALUE f_dilogarithm(VALUE, VALUE);
+extern VALUE f_gamma(VALUE, VALUE);
+extern VALUE f_zeta(VALUE, VALUE);
 #endif
