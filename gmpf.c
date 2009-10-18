@@ -1058,6 +1058,34 @@ f_cosecant( VALUE klass, VALUE angle ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// Array with sine and cossine
+// {GMP::Float} -> {Array <<GMP::Float>> (2)
+static VALUE
+f_sine_and_cossine( VALUE klass, VALUE angle ) {
+	// Creates pointers to the result's and angle's mpfr_t structures
+	mpfr_t *s = malloc(sizeof(*s));
+	mpfr_t *c = malloc(sizeof(*c));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_inits(*s, *c, (mpfr_ptr) 0);
+	
+	// Does the calculation
+	mpfr_sin_cos(*s, *c, *a, GMP_RNDN);
+	
+	// Converts the mpz_t results to VALUEs
+	VALUE sine = Data_Wrap_Struct(cGMPFloat, float_mark, float_free, s);
+	VALUE cossine = Data_Wrap_Struct(cGMPFloat, float_mark, float_free, c);
+	
+	// Creates the resulting array
+	VALUE array = rb_ary_new3(2, sine, cossine);
+	
+	return array;
+}
 //// end of trigonometric functions
 ////////////////////////////////////////////////////////////////////
 
@@ -1121,6 +1149,34 @@ f_atangent( VALUE klass, VALUE trig_value ) {
 	mpfr_atan(*r, *a, GMP_RNDN);
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Array with hyperbolic sine and cossine
+// {GMP::Float} -> {Array <<GMP::Float>> (2)
+static VALUE
+f_hsine_and_hcossine( VALUE klass, VALUE angle ) {
+	// Creates pointers to the result's and angle's mpfr_t structures
+	mpfr_t *s = malloc(sizeof(*s));
+	mpfr_t *c = malloc(sizeof(*c));
+	mpfr_t *a;
+	
+	// Loads the angle from Ruby
+	Data_Get_Struct(angle, mpfr_t, a);
+	
+	// Inits the result
+	mpfr_inits(*s, *c, (mpfr_ptr) 0);
+	
+	// Does the calculation
+	mpfr_sinh_cosh(*s, *c, *a, GMP_RNDN);
+	
+	// Converts the mpz_t results to VALUEs
+	VALUE sine = Data_Wrap_Struct(cGMPFloat, float_mark, float_free, s);
+	VALUE cossine = Data_Wrap_Struct(cGMPFloat, float_mark, float_free, c);
+	
+	// Creates the resulting array
+	VALUE array = rb_ary_new3(2, sine, cossine);
+	
+	return array;
 }
 //// end of inverse trigonometric functions
 ////////////////////////////////////////////////////////////////////
@@ -1672,6 +1728,45 @@ f_zeta( VALUE klass, VALUE number ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// Error function
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_error_function( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_erf(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+// Complimentary error function
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_error_function_comp( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_erfc(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
 
@@ -1736,6 +1831,7 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "cot", f_cotangent, 1);
 	rb_define_singleton_method(cGMPFloat, "sec", f_secant, 1);
 	rb_define_singleton_method(cGMPFloat, "csc", f_cosecant, 1);
+	rb_define_singleton_method(cGMPFloat, "sin_cos", f_sine_and_cossine, 1);
 	
 	// Hyperbolic trigonometry functions
 	rb_define_singleton_method(cGMPFloat, "sinh", f_hsine, 1);
@@ -1744,6 +1840,7 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "coth", f_hcotangent, 1);
 	rb_define_singleton_method(cGMPFloat, "sech", f_hsecant, 1);
 	rb_define_singleton_method(cGMPFloat, "csch", f_hcosecant, 1);
+	rb_define_singleton_method(cGMPFloat, "sinh_cosh", f_hsine_and_hcossine, 1);
 	
 	// Inverse trigonometric functions
 	rb_define_singleton_method(cGMPFloat, "asin", f_asine, 1);
@@ -1779,6 +1876,8 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "li2", f_dilogarithm, 1);
 	rb_define_singleton_method(cGMPFloat, "gamma", f_gamma, 1);
 	rb_define_singleton_method(cGMPFloat, "zeta", f_zeta, 1);
+	rb_define_singleton_method(cGMPFloat, "erf", f_error_function, 1);
+	rb_define_singleton_method(cGMPFloat, "erfc", f_error_function_comp, 1);
 #endif // MPFR
 
 	// Aliases

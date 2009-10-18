@@ -205,6 +205,7 @@ extern VALUE f_tangent(VALUE, VALUE);
 extern VALUE f_cotangent(VALUE, VALUE);
 extern VALUE f_secant(VALUE, VALUE);
 extern VALUE f_cosecant(VALUE, VALUE);
+extern VALUE f_sine_and_cossine(VALUE, VALUE);
 
 // Hyperbolic trigonometry functions
 extern VALUE f_hsine(VALUE, VALUE);
@@ -213,6 +214,7 @@ extern VALUE f_htangent(VALUE, VALUE);
 extern VALUE f_hcotangent(VALUE, VALUE);
 extern VALUE f_hsecant(VALUE, VALUE);
 extern VALUE f_hcosecant(VALUE, VALUE);
+extern VALUE f_sine_and_cossine(VALUE, VALUE);
 
 // Inverse trigonometric functions
 extern VALUE f_asine(VALUE, VALUE);
@@ -248,4 +250,6 @@ extern VALUE f_exp_integral(VALUE, VALUE);
 extern VALUE f_dilogarithm(VALUE, VALUE);
 extern VALUE f_gamma(VALUE, VALUE);
 extern VALUE f_zeta(VALUE, VALUE);
+extern VALUE f_error_function(VALUE, VALUE);
+extern VALUE f_error_function_comp(VALUE, VALUE);
 #endif
