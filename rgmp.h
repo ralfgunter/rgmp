@@ -34,8 +34,8 @@ extern VALUE cGMPInteger, cGMPRational, cGMPFloat;
 extern void Init_gmpz();
 
 // Garbage collection
-extern VALUE integer_mark(mpz_t*);
-extern VALUE integer_free(mpz_t*);
+extern void integer_mark(mpz_t*);
+extern void integer_free(mpz_t*);
 
 // Object allocation
 extern VALUE integer_allocate(VALUE);
@@ -58,7 +58,7 @@ extern VALUE z_power(VALUE, VALUE);
 extern VALUE z_left_shift(VALUE, VALUE);
 extern VALUE z_right_shift(VALUE, VALUE);
 
-//Unary arithmetical operators
+// Unary arithmetical operators
 extern VALUE z_positive(VALUE);
 extern VALUE z_negation(VALUE);
 
@@ -112,7 +112,9 @@ extern VALUE z_powermod(VALUE, VALUE, VALUE, VALUE);
 extern VALUE z_sqrt_singleton(VALUE, VALUE);
 extern VALUE z_root_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_fibonacci_singleton(VALUE, VALUE);
+extern VALUE z_fibonacci2_singleton(VALUE, VALUE);
 extern VALUE z_lucas_singleton(VALUE, VALUE);
+extern VALUE z_lucas2_singleton(VALUE, VALUE);
 extern VALUE z_factorial_singleton(VALUE, VALUE);
 extern VALUE z_binomial_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_remove_singleton(VALUE, VALUE, VALUE);
@@ -130,8 +132,8 @@ extern VALUE z_jacobi_singleton(VALUE, VALUE, VALUE);
 extern void Init_gmpq();
 
 // Garbage collection
-extern VALUE rational_mark(mpq_t*);
-extern VALUE rational_free(mpq_t*);
+extern void rational_mark(mpq_t*);
+extern void rational_free(mpq_t*);
 
 // Object allocation
 extern VALUE rational_allocate(VALUE);

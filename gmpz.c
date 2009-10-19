@@ -1643,7 +1643,7 @@ z_root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	// Copies back the mpz_t pointer wrapped in a ruby data object
 	// as well as the root value
 	Data_Get_Struct(number, mpz_t, n);
-	longDegree = NUM2LONG(degree);
+	longDegree = FIX2LONG(degree);
 	
 	// If the degree is zero, GMP will normally give a floating point error
 	// A possible solution is to make the degree -1, which works as expected
@@ -1673,7 +1673,7 @@ z_fibonacci_singleton( VALUE klass, VALUE index ) {
 	unsigned long longIndex;
 	
 	// Loads the index into a long
-	longIndex = NUM2LONG(index);
+	longIndex = FIX2LONG(index);
 	
 	// Inits the result
 	mpz_init(*r);
@@ -1683,6 +1683,33 @@ z_fibonacci_singleton( VALUE klass, VALUE index ) {
 	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
+// Fibonacci pairs generator
+// {Fixnum} -> {Array <GMP::Integer> (2)}
+static VALUE
+z_fibonacci2_singleton( VALUE klass, VALUE index ) {
+	// Creates placeholders for the two results
+	mpz_t *x = malloc(sizeof(*x));
+	mpz_t *y = malloc(sizeof(*y));
+	
+	// Loads the index into a long
+	unsigned long longIndex = FIX2LONG(index);
+	
+	// Inits both results
+	mpz_init(*x);
+	mpz_init(*y);
+	
+	// Does the calculation
+	mpz_fib2_ui(*x, *y, longIndex);
+	
+	// Converts the results into Ruby data objects
+	VALUE rx = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, x);
+	VALUE ry = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, y);
+	
+	return rb_ary_new3(2, ry, rx);
+}
+
+// Lucas numbers generator
+// {Fixnum} -> {GMP::Integer}
 static VALUE
 z_lucas_singleton( VALUE klass, VALUE index ) {
 	// Creates pointer to the result's mpz_t structure, and loads
@@ -1691,7 +1718,7 @@ z_lucas_singleton( VALUE klass, VALUE index ) {
 	unsigned long longIndex;
 	
 	// Loads the index into a long
-	longIndex = NUM2LONG(index);
+	longIndex = FIX2LONG(index);
 	
 	// Inits the result
 	mpz_init(*r);
@@ -1701,7 +1728,33 @@ z_lucas_singleton( VALUE klass, VALUE index ) {
 	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
+// Lucas pairs generator
+// {Fixnum} -> {Array <GMP::Integer> (2)}
+static VALUE
+z_lucas2_singleton( VALUE klass, VALUE index ) {
+	// Creates placeholders for the two results
+	mpz_t *x = malloc(sizeof(*x));
+	mpz_t *y = malloc(sizeof(*y));
+	
+	// Loads the index into a long
+	unsigned long longIndex = FIX2LONG(index);
+	
+	// Inits both results
+	mpz_init(*x);
+	mpz_init(*y);
+	
+	// Does the calculation
+	mpz_lucnum2_ui(*x, *y, longIndex);
+	
+	// Converts the results into Ruby data objects
+	VALUE rx = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, x);
+	VALUE ry = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, y);
+	
+	return rb_ary_new3(2, ry, rx);
+}
 
+// Factorial (n!)
+// {Fixnum} -> {GMP::Integer}
 static VALUE
 z_factorial_singleton( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's mpz_t structure, and loads
@@ -1710,7 +1763,7 @@ z_factorial_singleton( VALUE klass, VALUE number ) {
 	unsigned long longNumber;
 	
 	// Loads the number into a long
-	longNumber = NUM2LONG(number);
+	longNumber = FIX2LONG(number);
 	
 	// Inits the result
 	mpz_init(*r);
@@ -1735,7 +1788,7 @@ z_binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 	unsigned long longK;
 	
 	// Loads the number into a long
-	longK = NUM2LONG(k);
+	longK = FIX2LONG(k);
 	
 	// Inits the result
 	mpz_init(*r);
@@ -2038,7 +2091,9 @@ Init_gmpz() {
 	rb_define_singleton_method(cGMPInteger, "sqrt", z_sqrt_singleton, 1);
 	rb_define_singleton_method(cGMPInteger, "root", z_root_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "fib", z_fibonacci_singleton, 1);
+	rb_define_singleton_method(cGMPInteger, "fib2", z_fibonacci2_singleton, 1);
 	rb_define_singleton_method(cGMPInteger, "luc", z_lucas_singleton, 1);
+	rb_define_singleton_method(cGMPInteger, "luc2", z_lucas2_singleton, 1);
 	rb_define_singleton_method(cGMPInteger, "fac", z_factorial_singleton, 1);
 	rb_define_singleton_method(cGMPInteger, "bin", z_binomial_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "remove", z_remove_singleton, 2);
