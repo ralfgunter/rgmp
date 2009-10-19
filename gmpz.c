@@ -408,18 +408,14 @@ z_modulo( VALUE self, VALUE base ) {
 static VALUE
 z_power( VALUE self, VALUE exp ) {
 	// Creates pointers to self's and the result's mpz_t structures
-	mpz_t *i, *r;
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *i;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Loads self into *f
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// Decides what to do based on the exponent's type/class
 	switch (TYPE(exp)) {
@@ -474,19 +470,15 @@ static VALUE
 z_left_shift( VALUE self, VALUE shift ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	// Also creates a placeholder for the shift amount
-	mpz_t *i, *r;
 	unsigned long longShift;	// No pun intended
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *i;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Loads self into *f
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// If shift is of the correct type, then do the job!
 	// TODO: it is debatable whether or not we should check for
@@ -497,7 +489,7 @@ z_left_shift( VALUE self, VALUE shift ) {
 	longShift = NUM2LONG(shift);
 	mpz_mul_2exp(*r, *i, longShift);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Right shift (also division by a power of 2)
@@ -506,19 +498,15 @@ static VALUE
 z_right_shift( VALUE self, VALUE shift ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	// Also creates a placeholder for the shift amount
-	mpz_t *i, *r;
 	unsigned long longShift;	// No pun intended
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *i;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Loads self into *f
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// If shift is of the correct type, then do the job!
 	// TODO: it is debatable whether or not we should check for
@@ -529,7 +517,7 @@ z_right_shift( VALUE self, VALUE shift ) {
 	longShift = NUM2LONG(shift);
 	mpz_fdiv_q_2exp(*r, *i, longShift);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 //// end of binary operator methods
 ////////////////////////////////////////////////////////////////////
@@ -572,24 +560,20 @@ z_negation( VALUE self ) {
 static VALUE
 z_logic_and( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpz_t structures
-	mpz_t *i, *o, *r;
-	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *i, *o;
 	
 	// Copies back the mpz_t pointers wrapped in ruby data objects
 	Data_Get_Struct(self, mpz_t, i);
 	Data_Get_Struct(other, mpz_t, o);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// Sets result as self bitwise-and other
 	mpz_and(*r, *i, *o);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Logic OR (inclusive OR) (|)
@@ -597,24 +581,20 @@ z_logic_and( VALUE self, VALUE other ) {
 static VALUE
 z_logic_ior( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpz_t structures
-	mpz_t *i, *o, *r;
-	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *i, *o;
 	
 	// Copies back the mpz_t pointers wrapped in ruby data objects
 	Data_Get_Struct(self, mpz_t, i);
 	Data_Get_Struct(other, mpz_t, o);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// Sets result as self bitwise inclusive-or other
 	mpz_ior(*r, *i, *o);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Logic XOR (exclusive OR) (^)
@@ -622,24 +602,20 @@ z_logic_ior( VALUE self, VALUE other ) {
 static VALUE 
 z_logic_xor( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpz_t structures
-	mpz_t *i, *o, *r;
-	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *i, *o;
 	
 	// Copies back the mpz_t pointers wrapped in ruby data objects
 	Data_Get_Struct(self, mpz_t, i);
 	Data_Get_Struct(other, mpz_t, o);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// Sets result as self bitwise exclusive-or other
 	mpz_xor(*r, *i, *o);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Logic NOT (~)
@@ -1427,6 +1403,8 @@ z_nonzero( VALUE self ) {
 
 ////////////////////////////////////////////////////////////////////
 //// Other operations
+// Absolute value
+// {} -> {GMP::Integer}
 static VALUE
 z_absolute( VALUE self ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -1658,20 +1636,13 @@ static VALUE
 z_root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	// Creates pointers to number's and the result's mpz_t structures
 	// Also, creates the degree placeholder
-	mpz_t *n, *r;
 	unsigned long longDegree;
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *n;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Copies back the mpz_t pointer wrapped in a ruby data object
 	// as well as the root value
 	Data_Get_Struct(number, mpz_t, n);
-	Data_Get_Struct(result, mpz_t, r);
 	longDegree = NUM2LONG(degree);
 	
 	// If the degree is zero, GMP will normally give a floating point error
@@ -1684,84 +1655,69 @@ z_root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	if (mpz_sgn(*n) == -1 && longDegree % 2 == 0)
 		rb_raise(rb_eRuntimeError, "number is negative, but degree is even");
 	
+	// Inits the result
+	mpz_init(*r);
+	
 	mpz_root(*r, *n, longDegree);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Fibonacci numbers generator
 // {Fixnum} -> {GMP::Integer}
 static VALUE
 z_fibonacci_singleton( VALUE klass, VALUE index ) {
-	// Creates pointers to the result's mpz_t structure, and loads
+	// Creates pointer to the result's mpz_t structure, and loads
 	// creates a placeholder for the index
-	mpz_t *r;
+	mpz_t *r = malloc(sizeof(*r));
 	unsigned long longIndex;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointer wrapped in a ruby data object
-	// as well as the index
-	Data_Get_Struct(result, mpz_t, r);
+	// Loads the index into a long
 	longIndex = NUM2LONG(index);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	mpz_fib_ui(*r, longIndex);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 static VALUE
 z_lucas_singleton( VALUE klass, VALUE index ) {
-	// Creates pointers to the result's mpz_t structure, and loads
+	// Creates pointer to the result's mpz_t structure, and loads
 	// creates a placeholder for the index
-	mpz_t *r;
+	mpz_t *r = malloc(sizeof(*r));
 	unsigned long longIndex;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointer wrapped in a ruby data object
-	// as well as the index
-	Data_Get_Struct(result, mpz_t, r);
+	// Loads the index into a long
 	longIndex = NUM2LONG(index);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	mpz_lucnum_ui(*r, longIndex);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 
 static VALUE
 z_factorial_singleton( VALUE klass, VALUE number ) {
-	// Creates pointers to the result's mpz_t structure, and
-	// creates a placeholder for the index
-	mpz_t *r;
+	// Creates pointer to the result's mpz_t structure, and loads
+	// creates a placeholder for the number
+	mpz_t *r = malloc(sizeof(*r));
 	unsigned long longNumber;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointer wrapped in a ruby data object
-	// as well as the index
-	Data_Get_Struct(result, mpz_t, r);
+	// Loads the number into a long
 	longNumber = NUM2LONG(number);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	mpz_fac_ui(*r, longNumber);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Binomial coefficient/Combination (combinatorics)
@@ -1773,22 +1729,16 @@ z_binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 	if (TYPE(k) != T_FIXNUM)
 		rb_raise(rb_eTypeError, "k is not of a supported data type");
 	
-	// Creates pointers to the result's mpz_t structure and creates
-	// a placeholder for k
-	mpz_t *r;
+	// Creates pointer to the result's mpz_t structure, and loads
+	// creates a placeholder for the number
+	mpz_t *r = malloc(sizeof(*r));
 	unsigned long longK;
 	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
-	
-	// Copies back the mpz_t pointer wrapped in a ruby data object
-	// as well as the index
-	Data_Get_Struct(result, mpz_t, r);
+	// Loads the number into a long
 	longK = NUM2LONG(k);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	// Decides what to do based on n's type
 	switch (TYPE(n)) {
@@ -1808,7 +1758,7 @@ z_binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 		}
 	}
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Factor removal (divides exhaustively by one factor until no longer possible)
@@ -1818,23 +1768,22 @@ static VALUE
 z_remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	// Creates pointers to the number's, factor's and result's mpz_t
 	// structures
-	mpz_t *n, *f, *r;
-	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *n, *f;
 	
 	// Copies back the mpz_t pointers wrapped in ruby data objects
 	Data_Get_Struct(number, mpz_t, n);
 	Data_Get_Struct(factor, mpz_t, f);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	if (mpz_cmp_ui(*f, 1) <= 0)
+		rb_raise(rb_eRangeError, "factor must be bigger than 1");
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	mpz_remove(*r, *n, *f);
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Comparison of absolutes
@@ -1885,27 +1834,23 @@ z_invert_singleton( VALUE klass, VALUE number, VALUE base ) {
 	// structures
 	// Also creates an int which will be used to check if the number has an
 	// inverse on that base
-	mpz_t *n, *b, *r;
+	mpz_t *r = malloc(sizeof(*r));
+	mpz_t *n, *b;
 	int check;
-	
-	// Creates a new object which will receive the result from the operation
-	// TODO: put this in its own macro
-	VALUE argv[] = { INT2FIX(0) };
-	ID class_id = rb_intern("Integer");
-	VALUE class = rb_const_get(mGMP, class_id);
-	VALUE result = rb_class_new_instance(1, argv, class);
 	
 	// Copies back the mpz_t pointers wrapped in ruby data objects
 	Data_Get_Struct(number, mpz_t, n);
 	Data_Get_Struct(base, mpz_t, b);
-	Data_Get_Struct(result, mpz_t, r);
+	
+	// Inits the result
+	mpz_init(*r);
 	
 	check = mpz_invert(*r, *n, *b);
 	
 	if (check == 0)
 		rb_raise(rb_eRuntimeError, "input is not invertible on this base");
 	
-	return result;
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Least common multiple
@@ -2058,7 +2003,6 @@ Init_gmpz() {
 	rb_define_method(cGMPInteger, "<=>", z_generic_comparison, 1);
 	
 	// Inplace methods
-	// TODO: define non-inplace functions based on their inplace equivalents?
 	rb_define_method(cGMPInteger, "abs!", z_absolute_inplace, 0);
 	rb_define_method(cGMPInteger, "neg!", z_negation_inplace, 0);
 	rb_define_method(cGMPInteger, "next_prime!", z_next_prime_inplace, 0);
