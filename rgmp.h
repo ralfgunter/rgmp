@@ -257,6 +257,8 @@ extern VALUE f_factorial(VALUE, VALUE);
 extern VALUE f_exp_integral(VALUE, VALUE);
 extern VALUE f_dilogarithm(VALUE, VALUE);
 extern VALUE f_gamma(VALUE, VALUE);
+extern VALUE f_lngamma(VALUE, VALUE);
+extern VALUE f_lgamma(VALUE, VALUE);
 extern VALUE f_zeta(VALUE, VALUE);
 extern VALUE f_error_function(VALUE, VALUE);
 extern VALUE f_error_function_comp(VALUE, VALUE);

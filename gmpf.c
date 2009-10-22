@@ -1780,6 +1780,52 @@ f_gamma( VALUE klass, VALUE number ) {
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 
+// Natural logarithm of the absolute value of Euler's gamma function
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_lngamma( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_lngamma(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Natural logarithm of the absolute value of Euler's gamma function, plus the
+// sign of Gamma(number).
+// {GMP::Float} -> {Array <GMP::Float, Fixnum> (2)}
+static VALUE
+f_lgamma( VALUE klass, VALUE number ) {
+	// Creates pointer to the result's and number's mpfr_t structures, as well
+	// as a placeholder for the sign.
+	int intSign;
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(number, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_lgamma(*r, &intSign, *n, GMP_RNDN);
+	
+	VALUE calcResult = Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+	VALUE sign = INT2FIX(intSign);
+	
+	return rb_ary_new3(2, calcResult, sign);
+}
+
 // Riemann zeta function
 // {GMP::Float} -> {GMP::Float}
 static VALUE
@@ -2109,6 +2155,8 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "eint", f_exp_integral, 1);
 	rb_define_singleton_method(cGMPFloat, "li2", f_dilogarithm, 1);
 	rb_define_singleton_method(cGMPFloat, "gamma", f_gamma, 1);
+	rb_define_singleton_method(cGMPFloat, "lngamma", f_lngamma, 1);
+	rb_define_singleton_method(cGMPFloat, "lgamma", f_lgamma, 1);
 	rb_define_singleton_method(cGMPFloat, "zeta", f_zeta, 1);
 	rb_define_singleton_method(cGMPFloat, "erf", f_error_function, 1);
 	rb_define_singleton_method(cGMPFloat, "erfc", f_error_function_comp, 1);
