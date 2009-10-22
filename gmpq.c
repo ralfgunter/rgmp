@@ -60,11 +60,112 @@ q_init( VALUE self, VALUE ratData ) {
 	
 	return Qnil;
 }
-
 //// end of fundamental methods
 ////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////
+//// Conversion methods
+// To string
+// {} -> {String}
+static VALUE
+q_to_string( VALUE argc, VALUE *argv, VALUE self ) {
+	// Loads self into a mpq_t
+	mpq_t *s;
+	Data_Get_Struct(self, mpq_t, s);
+	
+	// Creates a placeholder for the optional argument
+	VALUE base;
+	
+	// The base argument is optional, and can vary from 2 to 36
+	rb_scan_args(argc, argv, "01", &base);
+	
+	// Loads the base into an int, regardless of it having been passed or not
+	if (!FIXNUM_P(base) && !NIL_P(base))
+		rb_raise(rb_eTypeError, "base must be a fixnum");
+	int intBase = FIX2INT(base);
+	
+	// If the base hasn't been defined, this defaults it to 10
+	if (base == Qnil)
+		intBase = 10;
+	
+	// Checks if the base is within range
+	if (!(intBase >= 2 && intBase <= 36))
+		rb_raise(rb_eRangeError, "base out of range");
+	
+	char *intStr = mpq_get_str(NULL, intBase, *s);
+	VALUE rStr = rb_str_new2(intStr);
+	free(intStr);
+	
+	return rStr;
+}
+//// end of conversion methods
+////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////
+//// Unary arithmetical operators
+// Plus (+a)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_positive( VALUE self ) {
+	return self;
+}
+
+// Negation (-a)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_negation( VALUE self ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *f
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Negates i, and copies the result to r
+	mpq_neg(*r, *q);
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+//// end of unary arithmetical operators
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+//// Other operations
+// Efficient swap
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_swap( VALUE self, VALUE other ) {
+	// Creates pointers to self's and other's mpq_t structures
+	mpq_t *q, *o;
+	
+	// Copies back the mpq_t pointers wrapped in ruby data objects
+	Data_Get_Struct(self, mpq_t, q);
+	Data_Get_Struct(other, mpq_t, o);
+	
+	// Swaps the contents of self and other
+	mpq_swap(*q, *o);
+	
+	return Qnil;
+}
+
+// Sign
+// {GMP::Rational} -> {Fixnum}
+static VALUE
+q_sign( VALUE self ) {
+	// Loads self into a mpq_t
+	mpq_t *s;
+	Data_Get_Struct(self, mpq_t, s);
+	
+	// Gets the sign of self
+	int intSign = mpq_sgn(*s);
+	
+	return INT2FIX(intSign);
+}
+//// end of other operations
+////////////////////////////////////////////////////////////////////
 
 void
 Init_gmpq() {
@@ -75,4 +176,15 @@ Init_gmpq() {
 	// Book keeping and the constructor method
 	rb_define_alloc_func(cGMPRational, rational_allocate);
 	rb_define_method(cGMPRational, "initialize", q_init, 1);
+	
+	// Conversion methods
+	rb_define_method(cGMPRational, "to_s", q_to_string, -1);
+	
+	// Unary arithmetical operators
+	rb_define_method(cGMPRational, "+@", q_positive, 0);
+	rb_define_method(cGMPRational, "-@", q_negation, 0);
+	
+	// Other operations
+	rb_define_method(cGMPRational, "swap", q_swap, 1);
+	rb_define_method(cGMPRational, "sign", q_sign, 0);
 }
