@@ -2041,6 +2041,46 @@ f_fms( VALUE klass, VALUE a, VALUE b, VALUE c ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// Logarithm plus 1 (result = ln(logarithmand) + 1)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_log1p( VALUE klass, VALUE logarithmand ) {
+	// Creates pointers to the result's and logarithmand's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *l;
+	
+	// Loads the logarithmand from Ruby
+	Data_Get_Struct(logarithmand, mpfr_t, l);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_log1p(*r, *l, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// E to the power (exponent - 1)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_expm1( VALUE klass, VALUE exponent ) {
+	// Creates pointers to the result's and exponent's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *e;
+	
+	// Loads the exponent from Ruby
+	Data_Get_Struct(exponent, mpfr_t, e);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_expm1(*r, *e, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
 #endif // MPFR
@@ -2167,6 +2207,8 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "hypot", f_euclidean_norm, 2);
 	rb_define_singleton_method(cGMPFloat, "fma", f_fma, 2);
 	rb_define_singleton_method(cGMPFloat, "fms", f_fms, 2);
+	rb_define_singleton_method(cGMPFloat, "log1p", f_log1p, 1);
+	rb_define_singleton_method(cGMPFloat, "expm1", f_expm1, 1);
 #endif // MPFR
 
 	// Aliases

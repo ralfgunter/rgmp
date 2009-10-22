@@ -269,4 +269,6 @@ extern VALUE f_ag_mean(VALUE, VALUE, VALUE);
 extern VALUE f_euclidean_norm(VALUE, VALUE, VALUE);
 extern VALUE f_fma(VALUE, VALUE, VALUE, VALUE);
 extern VALUE f_fms(VALUE, VALUE, VALUE, VALUE);
+extern VALUE f_log1p(VALUE, VALUE);
+extern VALUE f_expm1(VALUE, VALUE);
 #endif
