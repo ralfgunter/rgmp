@@ -22,8 +22,8 @@ Most domain-specific development goes into its own branch, and then is merged ba
 
 The main reasons why the test suite is not ran immediately after every commit, besides the obvious one, are that:
 
-1) My knowledge of math is pretty limited, and so I usually have to do some research or talk to someone before actually writing a test case (function domain, etc).
-2) Most transcedental functions are not implemented natively in Ruby. For the time being, the result is checked against a short C program written specifically for the function being tested.
+* My knowledge of math is pretty limited, and so I usually have to do some research or talk to someone before actually writing a test case (function domain, etc).
+* Most transcedental functions are not implemented natively in Ruby. For the time being, the result is checked against a short C program written specifically for the function being tested.
 
 I always make sure that, before it is commited to a branch, the code at least 1) compiles cleanly, and 2) does not make Ruby crash (i.e. the function is callable for a randomly-picked number; see 1 above), but a typo or a gmp/mpfr conversion quirk may go unnoticed. These should not get to <b>master</b>, though.
 
