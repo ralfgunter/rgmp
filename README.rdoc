@@ -2,22 +2,40 @@
 
 rGMP is another Ruby wrapper for the <b>GNU Multiple Precision</b> library, which is a very fast math library written in C, C++ and assembly. When MPFR, the <b>Multi-Precision Floating Point Reliable</b> library, is present, it also inherits its methods, complementing the Float class defined under GMP::Float.
 
-One of the main goals is to effectively replace all of Bignum/Numeric in terms of functionality and then surpass them, giving Ruby that extra oomph it needs to work with math-heavy projects (such as in scientific computing). To achieve this, rGMP will implement all applicable methods from the GMP and MPFR libraries, with both regular (fast, very ruby-like) and in-place (faster, avoids some object creating) methods. Also, it aims to be fully compatible with the current Bignum class, making it an easier transition for those whose projects demand a lot of performance but are in an advanced stage of development.
+One of the main goals is to effectively replace all of Numeric in terms of functionality and then surpass it, giving Ruby that extra oomph it needs to work with math-heavy projects (such as in scientific computing). To achieve this, rGMP will implement all applicable methods from the GMP and MPFR libraries, with both regular (fast, very ruby-like) and in-place (faster, avoids some object creating) methods. Also, it aims to be fully compatible with the current Bignum class, making it an easier transition for those whose projects demand a lot of performance but are in an advanced stage of development.
 
 It does not mean, however, that it IS in fact a drop-in replacement, since the usual way of doing things might be inefficient some times - regular vs. in-place methods for one - therefore proper documentation is a must as well. In spite of that, the speed-up given by GMP for reasonably sized numbers is such that it may obfuscate the bottleneck that is the ruby-to-c/c-to-ruby converting voodoo that takes place in almost all methods.
 
 For more information about GMP, please visit http://gmplib.org
+
 If you want to learn more about MPFR, its website can be found at http://mpfr.org
 
 =License
 
 This project is licensed under the GPL v3 and later, but I'm pondering whether or not to use LGPL as well.
 
+=Comments on the branches
+
+There are currently four main branches in the project, namely <b>master</b>, <b>integer-dev</b>, <b>rational-dev</b> and <b>float-dev</b>.
+
+Most domain-specific development goes into its own branch, and then is merged back into <b>master</b> when it passes the relevant test suite. This does not mean, however, that anything on <b>master</b> is considered production-ready. For one, performance is not measured in the aforementioned test suite, and neither is any sort of memory leak, etc.
+
+The main reasons why the test suite is not ran immediately after every commit, besides the obvious one, are that:
+
+1) My knowledge of math is pretty limited, and so I usually have to do some research or talk to someone before actually writing a test case (function domain, etc).
+2) Most transcedental functions are not implemented natively in Ruby. For the time being, the result is checked against a short C program written specifically for the function being tested.
+
+I always make sure that, before it is commited to a branch, the code at least 1) compiles cleanly, and 2) does not make Ruby crash (i.e. the function is callable for a randomly-picked number; see 1 above), but a typo or a gmp/mpfr conversion quirk may go unnoticed. These should not get to <b>master</b>, though.
+
+=Installation
+
+For now, a Ruby gem is not available, since the code is not functionally complete (GMP::Rational is not even nearly implemented yet). If what you need is something that is already 'done', you can install the extension by running 'ruby extconf.rb', then doing 'make' and 'make install'.
+
 =Notes
 
 Currently, this is a hobby project to help me learn C, Ruby, and GMP/MPFR, which shows in the quality of the code!
 
-Please do take note that this is my first public project, and my experience with C is less than two or three months old, with Ruby being of a couple of months more. This means that it is almost certain that there are vast amounts of memory leaks, buffer overflows, general code untidiness, inaccurate/outrageously wrong comments and inefficient constructions, to say the least!
+Please do take note that this is my first public project, and my experience with C is very limited, with Ruby being not much better. This means that it is almost certain that there are vast amounts of memory leaks, buffer overflows, general code untidiness, inaccurate/outrageously wrong comments and inefficient constructions, to say the least!
 
 Thus, I believe it should not yet be used in production environments, unless you want to amuse yourself and your colleagues :).
 
