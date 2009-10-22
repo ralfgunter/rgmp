@@ -265,4 +265,6 @@ extern VALUE f_cube_root(VALUE, VALUE);
 extern VALUE f_nth_root(VALUE, VALUE, VALUE);
 extern VALUE f_ag_mean(VALUE, VALUE, VALUE);
 extern VALUE f_euclidean_norm(VALUE, VALUE, VALUE);
+extern VALUE f_fma(VALUE, VALUE, VALUE, VALUE);
+extern VALUE f_fms(VALUE, VALUE, VALUE, VALUE);
 #endif

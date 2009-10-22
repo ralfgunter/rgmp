@@ -1941,6 +1941,50 @@ f_euclidean_norm( VALUE klass, VALUE a, VALUE b ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// fma: (a * b) + c
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}
+static VALUE
+f_fma( VALUE klass, VALUE a, VALUE b, VALUE c ) {
+	// Creates a pointer to the result
+	mpfr_t *r = malloc(sizeof(*r));
+	
+	// Loads the numbers from Ruby
+	mpfr_t *ma, *mb, *mc;
+	Data_Get_Struct(a, mpfr_t, ma);
+	Data_Get_Struct(b, mpfr_t, mb);
+	Data_Get_Struct(c, mpfr_t, mc);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_fma(*r, *ma, *mb, *mc, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// fms: (a * b) - c
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}
+static VALUE
+f_fms( VALUE klass, VALUE a, VALUE b, VALUE c ) {
+	// Creates a pointer to the result
+	mpfr_t *r = malloc(sizeof(*r));
+	
+	// Loads the numbers from Ruby
+	mpfr_t *ma, *mb, *mc;
+	Data_Get_Struct(a, mpfr_t, ma);
+	Data_Get_Struct(b, mpfr_t, mb);
+	Data_Get_Struct(c, mpfr_t, mc);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_fms(*r, *ma, *mb, *mc, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
 #endif // MPFR
@@ -2063,6 +2107,8 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "root", f_nth_root, 2);
 	rb_define_singleton_method(cGMPFloat, "agm", f_ag_mean, 2);
 	rb_define_singleton_method(cGMPFloat, "hypot", f_euclidean_norm, 2);
+	rb_define_singleton_method(cGMPFloat, "fma", f_fma, 2);
+	rb_define_singleton_method(cGMPFloat, "fms", f_fms, 2);
 #endif // MPFR
 
 	// Aliases
