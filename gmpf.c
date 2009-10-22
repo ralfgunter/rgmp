@@ -763,18 +763,21 @@ f_integer( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 //// Other methods
 // Sets the floating point precision for a specific number/object
-// {GMP::Integer}, {Fixnum, Bignum} -> {NilClass}
+// {Fixnum} -> {NilClass}
 static VALUE
 f_set_precision( VALUE self, VALUE precision ) {
 	// Creates a mpf_t pointer and loads self in it.
 	// Also loads the precision into an unsigned long.
 	mpf_t *s;
-	unsigned long longPrecision = NUM2LONG(precision);
+	long longPrecision = FIX2INT(precision);
 	Data_Get_Struct(self, mpf_t, s);
 	
+#ifndef MPFR
 	// Sets the object's minimum precision
 	mpf_set_prec(*s, longPrecision);
-	
+#else
+	mpfr_prec_round(*s, longPrecision, GMP_RNDN);
+#endif
 	return Qnil;
 }
 
@@ -783,15 +786,13 @@ f_set_precision( VALUE self, VALUE precision ) {
 // create a Fixnum object every time it's called.
 // {} -> {Fixnum}
 static VALUE
-f_get_precision( VALUE self, VALUE precision ) {
+f_get_precision( VALUE self ) {
 	// Creates a mpf_t pointer and loads self in it.
-	// Also creates a placeholder for the precision.
 	mpf_t *s;
-	unsigned long longPrecision = NUM2LONG(precision);
 	Data_Get_Struct(self, mpf_t, s);
 	
 	// Sets the object's minimum precision
-	longPrecision = mpf_get_prec(*s);
+	long longPrecision = mpf_get_prec(*s);
 	
 	return LONG2FIX(longPrecision);
 }
@@ -917,11 +918,11 @@ f_truncate( VALUE self ) {
 //// Singletons/Class methods
 // Sets the default floating point precision.
 // GMP uses at least this number of bits.
-// {Fixnum, Bignum} -> {NilClass}
+// {Fixnum} -> {NilClass}
 static VALUE
 f_set_def_prec( VALUE klass, VALUE precision ) {
 	// Loads the number of bits into an unsigned long
-	unsigned long longPrecision = NUM2LONG(precision);
+	unsigned long longPrecision = FIX2LONG(precision);
 	
 	// Sets a class variable to hold this value
 	rb_define_class_variable(cGMPFloat, "@@default_precision", precision);
