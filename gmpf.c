@@ -64,6 +64,16 @@ f_init( VALUE argc, VALUE *argv, VALUE self ) {
 	Data_Get_Struct(self, mpf_t, s);
 	
 	switch (TYPE(number)) {
+		case T_DATA: {
+			if (rb_obj_class(number) == cGMPFloat) {
+				mpf_t *ngf;
+				Data_Get_Struct(number, mpf_t, ngf);
+				mpf_set(*s, *ngf);
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
 		case T_STRING: {
 			mpf_set_str(*s, StringValuePtr(number), 10);
 			break;
