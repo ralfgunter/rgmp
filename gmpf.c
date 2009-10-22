@@ -100,7 +100,10 @@ f_to_string( VALUE self ) {
 	mp_exp_t exp;
 	char *str = mpf_get_str(NULL, &exp, 10, 0, *s);
 	
-	return rb_str_new2(str);
+	VALUE string = rb_str_new2(str);
+	free(str);
+	
+	return string;
 }
 
 // To Float
@@ -938,6 +941,66 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 
 #ifdef MPFR
 ////////////////////////////////////////////////////////////////////
+//// Question-like methods
+// Is it Not a Number?
+// {} -> {TrueClass, FalseClass}
+static VALUE
+f_nan( VALUE self ) {
+	// Loads self into a mpfr_t structure
+	mpfr_t *s;
+	Data_Get_Struct(self, mpfr_t, s);
+	
+	if (mpfr_nan_p(*s))
+		return Qtrue;
+	else
+		return Qfalse;
+}
+
+// Is it infinity (well, not quite, but anyhow...)?
+// {} -> {TrueClass, FalseClass}
+static VALUE
+f_inf( VALUE self ) {
+	// Loads self into a mpfr_t structure
+	mpfr_t *s;
+	Data_Get_Struct(self, mpfr_t, s);
+	
+	if (mpfr_inf_p(*s))
+		return Qtrue;
+	else
+		return Qfalse;
+}
+
+// Is it a number (i.e. neither NaN or infinity)
+// {} -> {TrueClass, FalseClass}
+static VALUE
+f_number( VALUE self ) {
+	// Loads self into a mpfr_t structure
+	mpfr_t *s;
+	Data_Get_Struct(self, mpfr_t, s);
+	
+	if (mpfr_number_p(*s))
+		return Qtrue;
+	else
+		return Qfalse;
+}
+
+// Is it zero?
+// {} -> {TrueClass, FalseClass}
+static VALUE
+f_zero( VALUE self ) {
+	// Loads self into a mpfr_t structure
+	mpfr_t *s;
+	Data_Get_Struct(self, mpfr_t, s);
+	
+	if (mpfr_zero_p(*s))
+		return Qtrue;
+	else
+		return Qfalse;
+}
+//// end of question-like methods
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Trigonometric functions
 // Sine
 // {GMP::Float} -> {GMP::Float}
@@ -1433,8 +1496,6 @@ f_log10( VALUE klass, VALUE logarithmand ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
-
-#endif // MPFR
 //// end of logarithm methods
 ////////////////////////////////////////////////////////////////////
 
@@ -1767,9 +1828,122 @@ f_error_function_comp( VALUE klass, VALUE number ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// Inverse square root (1/sqrt(x))
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_rec_sqrt( VALUE klass, VALUE radicand ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(radicand, mpfr_t, n);
+	
+	// Checks that the radicand is positive
+	if (mpfr_sgn(*n) <= 0)
+		rb_raise(rb_eTypeError, "radicand must be positive");
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_rec_sqrt(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Cube root
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_cube_root( VALUE klass, VALUE radicand ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(radicand, mpfr_t, n);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_cbrt(*r, *n, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Nth root
+// {GMP::Float}, {Fixnum} -> {GMP::Float}
+static VALUE
+f_nth_root( VALUE klass, VALUE radicand, VALUE degree ) {
+	// Creates pointer to the result's and number's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *n;
+	
+	// Loads the number from Ruby
+	Data_Get_Struct(radicand, mpfr_t, n);
+	
+	// Loads the degree from Ruby
+	int intDegree = FIX2INT(degree);
+	
+	// Checks that the radicand is non-negative if the degree is even
+	if (degree & 1 == 0 && mpfr_sgn(*n) < 0)
+		rb_raise(rb_eTypeError, "radicand must be positive if degree is even");
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_root(*r, *n, intDegree, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Arithmetic-geometric mean
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}
+static VALUE
+f_ag_mean( VALUE klass, VALUE a, VALUE b ) {
+	// Creates a pointer to the result
+	mpfr_t *r = malloc(sizeof(*r));
+	
+	// Loads the numbers from Ruby
+	mpfr_t *ma, *mb;
+	Data_Get_Struct(a, mpfr_t, ma);
+	Data_Get_Struct(b, mpfr_t, mb);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_agm(*r, *ma, *mb, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Euclidean norm (also the hypotenuse of the corresponding right triangle)
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}
+static VALUE
+f_euclidean_norm( VALUE klass, VALUE a, VALUE b ) {
+	// Creates a pointer to the result
+	mpfr_t *r = malloc(sizeof(*r));
+	
+	// Loads the numbers from Ruby
+	mpfr_t *ma, *mb;
+	Data_Get_Struct(a, mpfr_t, ma);
+	Data_Get_Struct(b, mpfr_t, mb);
+	
+	// Inits the result;
+	mpfr_init(*r);
+	
+	// Does the calculation
+	mpfr_hypot(*r, *ma, *mb, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
-
+#endif // MPFR
 
 
 void
@@ -1824,6 +1998,12 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "sqrt", f_sqrt_singleton, 1);
 	
 #ifdef MPFR
+	// Question-like methods
+	rb_define_method(cGMPFloat, "nan?", f_nan, 0);
+	rb_define_method(cGMPFloat, "inf?", f_inf, 0);
+	rb_define_method(cGMPFloat, "number?", f_number, 0);
+	rb_define_method(cGMPFloat, "zero?", f_zero, 0);
+	
 	// Trigonometric functions
 	rb_define_singleton_method(cGMPFloat, "sin", f_sine, 1);
 	rb_define_singleton_method(cGMPFloat, "cos", f_cossine, 1);
@@ -1878,6 +2058,11 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "zeta", f_zeta, 1);
 	rb_define_singleton_method(cGMPFloat, "erf", f_error_function, 1);
 	rb_define_singleton_method(cGMPFloat, "erfc", f_error_function_comp, 1);
+	rb_define_singleton_method(cGMPFloat, "rec_sqrt", f_rec_sqrt, 1);
+	rb_define_singleton_method(cGMPFloat, "cbrt", f_cube_root, 1);
+	rb_define_singleton_method(cGMPFloat, "root", f_nth_root, 2);
+	rb_define_singleton_method(cGMPFloat, "agm", f_ag_mean, 2);
+	rb_define_singleton_method(cGMPFloat, "hypot", f_euclidean_norm, 2);
 #endif // MPFR
 
 	// Aliases

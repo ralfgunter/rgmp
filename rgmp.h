@@ -200,6 +200,12 @@ extern VALUE f_get_def_prec(VALUE);
 extern VALUE f_sqrt_singleton(VALUE);
 
 #ifdef MPFR
+// Question-like methods
+extern VALUE f_nan(VALUE);
+extern VALUE f_inf(VALUE);
+extern VALUE f_number(VALUE);
+extern VALUE f_zero(VALUE);
+
 // Trigonometric functions
 extern VALUE f_sine(VALUE, VALUE);
 extern VALUE f_cossine(VALUE, VALUE);
@@ -254,4 +260,9 @@ extern VALUE f_gamma(VALUE, VALUE);
 extern VALUE f_zeta(VALUE, VALUE);
 extern VALUE f_error_function(VALUE, VALUE);
 extern VALUE f_error_function_comp(VALUE, VALUE);
+extern VALUE f_rec_sqrt(VALUE, VALUE);
+extern VALUE f_cube_root(VALUE, VALUE);
+extern VALUE f_nth_root(VALUE, VALUE, VALUE);
+extern VALUE f_ag_mean(VALUE, VALUE, VALUE);
+extern VALUE f_euclidean_norm(VALUE, VALUE, VALUE);
 #endif
