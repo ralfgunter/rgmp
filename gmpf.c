@@ -161,6 +161,7 @@ f_addition( VALUE self, VALUE summand ) {
 			break;
 		}
 		case T_FLOAT: {
+#ifndef MPFR
 			// GMP does not provide support for adding a mpf_t to a C double
 			// so first we have to convert Ruby's Float to a mpf_t and then do
 			// the operation
@@ -168,6 +169,10 @@ f_addition( VALUE self, VALUE summand ) {
 			mpf_init_set_d(tempSufl, NUM2DBL(summand));
 			mpf_add(*r, *f, tempSufl);
 			mpf_clear(tempSufl);
+#else
+			double ds = NUM2DBL(summand);
+			mpfr_add_d(*r, *f, ds, GMP_RNDN);
+#endif
 			break;
 		}
 		case T_FIXNUM: {
@@ -224,6 +229,7 @@ f_subtraction( VALUE self, VALUE subtraend ) {
 			break;
 		}
 		case T_FLOAT: {
+#ifndef MPFR
 			// GMP does not provide support for adding a mpf_t to a C double
 			// so first we have to convert Ruby's Float to a mpf_t and then do
 			// the operation
@@ -231,6 +237,10 @@ f_subtraction( VALUE self, VALUE subtraend ) {
 			mpf_init_set_d(tempSufl, NUM2DBL(subtraend));
 			mpf_sub(*r, *f, tempSufl);
 			mpf_clear(tempSufl);
+#else
+			double ds = NUM2DBL(subtraend);
+			mpfr_sub_d(*r, *f, ds, GMP_RNDN);
+#endif
 			break;
 		}
 		case T_FIXNUM: {
@@ -287,6 +297,7 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 			break;
 		}
 		case T_FLOAT: {
+#ifndef MPFR
 			// GMP does not provide support for multiplying a mpf_t with a
 			// C double, so first we have to convert Ruby's Float to a mpf_t
 			// and then do the operation
@@ -294,6 +305,10 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 			mpf_init_set_d(tempMufl, NUM2DBL(multiplicand));
 			mpf_mul(*r, *f, tempMufl);
 			mpf_clear(tempMufl);
+#else
+			double dm = NUM2DBL(multiplicand);
+			mpfr_mul_d(*r, *f, dm, GMP_RNDN);
+#endif
 			break;
 		}
 		case T_FIXNUM: {
@@ -346,6 +361,7 @@ f_division( VALUE self, VALUE dividend ) {
 			break;
 		}
 		case T_FLOAT: {
+#ifndef MPFR
 			// GMP does not provide support for dividing a mpf_t by a
 			// C double, so first we have to convert Ruby's Float to a mpf_t
 			// and then do the operation
@@ -353,6 +369,10 @@ f_division( VALUE self, VALUE dividend ) {
 			mpf_init_set_d(tempDifl, NUM2DBL(dividend));
 			mpf_div(*r, *f, tempDifl);
 			mpf_clear(tempDifl);
+#else
+			double df = NUM2DBL(dividend);
+			mpfr_div_d(*r, *f, df, GMP_RNDN);
+#endif
 			break;
 		}
 		case T_FIXNUM: {
@@ -379,8 +399,7 @@ f_division( VALUE self, VALUE dividend ) {
 }
 
 // Exponentiation (**)
-// {Fixnum} -> {GMP::Float}
-// TODO: incorporate MPFR
+// {(mpfr) GMP::Float, Fixnum} -> {GMP::Float}
 static VALUE
 f_power( VALUE self, VALUE exponent ) {
 	// Creates pointers to self's and the result's mpf_t structures
@@ -393,11 +412,32 @@ f_power( VALUE self, VALUE exponent ) {
 	// Inits the result
 	mpf_init(*r);
 	
+#ifndef MPFR
 	// GMP only supports positive integral exponents
 	if (!FIXNUM_P(exponent))
 		rb_raise(rb_eTypeError, "exponent must be a (positive) Fixnum");
 	mpf_pow_ui(*r, *f, FIX2LONG(exponent));
-	
+#else
+	switch (TYPE(exponent)) {
+		case T_DATA: {
+			if (rb_obj_class(exponent) == cGMPFloat) {
+				mpfr_t *ef;
+				Data_Get_Struct(exponent, mpfr_t, ef);
+				mpfr_pow(*r, *f, *ef, GMP_RNDN);
+			} else {
+				rb_raise(rb_eTypeError, "exponent's type is not supported");
+			}
+			break;
+		}
+		case T_FIXNUM: {
+			mpfr_pow_si(*r, *f, FIX2LONG(exponent), GMP_RNDN);
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "exponent's type is not supported");
+		}
+	}
+#endif
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
 //// end of binary operator methods
@@ -1446,7 +1486,6 @@ f_hcosecant( VALUE klass, VALUE angle ) {
 //// Logarithm methods
 // Natural logarithm
 // {GMP::Float} -> {GMP::Float}
-// TODO: check the variable naming
 static VALUE
 f_logn( VALUE klass, VALUE logarithmand ) {
 	// Creates pointers to the result's and logarithmand's mpfr_t structures
@@ -1467,7 +1506,6 @@ f_logn( VALUE klass, VALUE logarithmand ) {
 
 // Base 2 logarithm
 // {GMP::Float} -> {GMP::Float}
-// TODO: check the variable naming
 static VALUE
 f_log2( VALUE klass, VALUE logarithmand ) {
 	// Creates pointers to the result's and logarithmand's mpfr_t structures
@@ -1488,7 +1526,6 @@ f_log2( VALUE klass, VALUE logarithmand ) {
 
 // Base 10 logarithm
 // {GMP::Float} -> {GMP::Float}
-// TODO: check the variable naming
 static VALUE
 f_log10( VALUE klass, VALUE logarithmand ) {
 	// Creates pointers to the result's and logarithmand's mpfr_t structures
