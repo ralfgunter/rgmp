@@ -103,38 +103,18 @@ q_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 	
 	return rStr;
 }
+
+// To Float
+// {} -> {Float}
+static VALUE
+q_to_float( VALUE self ) {
+	// Loads self into a mpq_t
+	mpq_t *s;
+	Data_Get_Struct(self, mpq_t, s);
+	
+	return rb_float_new(mpq_get_d(*s));
+}
 //// end of conversion methods
-////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////
-//// Unary arithmetical operators
-// Plus (+a)
-// {GMP::Rational} -> {GMP::Rational}
-static VALUE
-q_positive( VALUE self ) {
-	return self;
-}
-
-// Negation (-a)
-// {GMP::Rational} -> {GMP::Rational}
-static VALUE
-q_negation( VALUE self ) {
-	// Creates pointers to self's and the result's mpq_t structures
-	mpq_t *r = malloc(sizeof(*r));
-	mpq_t *q;
-	
-	// Loads self into *f
-	Data_Get_Struct(self, mpq_t, q);
-	
-	// Inits the result
-	mpq_init(*r);
-	
-	// Negates i, and copies the result to r
-	mpq_neg(*r, *q);
-	
-	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
-}
-//// end of unary arithmetical operators
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
@@ -147,7 +127,7 @@ q_addition( VALUE self, VALUE summand ) {
 	mpq_t *r = malloc(sizeof(*r));
 	mpq_t *q;
 	
-	// Loads self into *f
+	// Loads self into *q
 	Data_Get_Struct(self, mpq_t, q);
 	
 	// Inits the result
@@ -181,7 +161,7 @@ q_subtraction( VALUE self, VALUE subtrahend ) {
 	mpq_t *r = malloc(sizeof(*r));
 	mpq_t *q;
 	
-	// Loads self into *f
+	// Loads self into *q
 	Data_Get_Struct(self, mpq_t, q);
 	
 	// Inits the result
@@ -215,7 +195,7 @@ q_multiplication( VALUE self, VALUE multiplicand ) {
 	mpq_t *r = malloc(sizeof(*r));
 	mpq_t *q;
 	
-	// Loads self into *f
+	// Loads self into *q
 	Data_Get_Struct(self, mpq_t, q);
 	
 	// Inits the result
@@ -249,7 +229,7 @@ q_division( VALUE self, VALUE divisor ) {
 	mpq_t *r = malloc(sizeof(*r));
 	mpq_t *q;
 	
-	// Loads self into *f
+	// Loads self into *q
 	Data_Get_Struct(self, mpq_t, q);
 	
 	// Inits the result
@@ -279,6 +259,37 @@ q_division( VALUE self, VALUE divisor ) {
 	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
 }
 //// end of binary arithmetical operators
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+//// Unary arithmetical operators
+// Plus (+a)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_positive( VALUE self ) {
+	return self;
+}
+
+// Negation (-a)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_negation( VALUE self ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *q
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Negates i, and copies the result to r
+	mpq_neg(*r, *q);
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+//// end of unary arithmetical operators
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
@@ -313,6 +324,51 @@ q_sign( VALUE self ) {
 	
 	return INT2FIX(intSign);
 }
+
+// Absolute value
+// {} -> {GMP::Rational}
+static VALUE
+q_absolute( VALUE self ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *q
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Sets the result as the absolute value of self
+	mpq_abs(*r, *q);
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+
+// Inversion (1/self)
+// {} -> {GMP::Rational}
+static VALUE
+q_invert( VALUE self ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *q
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Raises an exception if the numerator is zero (which will make GMP
+	// divide by zero).
+	if (mpz_cmp_ui(mpq_numref(*q), 0) == 0)
+		rb_raise(rb_eRuntimeError, "numerator cannot be zero");
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Sets the result as the absolute value of self
+	mpq_inv(*r, *q);
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
 //// end of other operations
 ////////////////////////////////////////////////////////////////////
 
@@ -330,6 +386,7 @@ Init_gmpq() {
 	
 	// Conversion methods
 	rb_define_method(cGMPRational, "to_s", q_to_string, -1);
+	rb_define_method(cGMPRational, "to_f", q_to_float, 0);
 	
 	// Binary arithmetical operators
 	rb_define_method(cGMPRational, "+", q_addition, 1);
@@ -344,4 +401,6 @@ Init_gmpq() {
 	// Other operations
 	rb_define_method(cGMPRational, "swap", q_swap, 1);
 	rb_define_method(cGMPRational, "sign", q_sign, 0);
+	rb_define_method(cGMPRational, "abs", q_absolute, 0);
+	rb_define_method(cGMPRational, "inv", q_invert, 0);
 }
