@@ -51,6 +51,11 @@ q_init( VALUE self, VALUE ratData ) {
 	switch (TYPE(ratData)) {
 		case T_STRING: {
 			mpq_set_str(*q, StringValuePtr(ratData), 10);
+			
+			if (mpz_cmp_ui(mpq_denref(*q), 0) == 0)
+				rb_raise(rb_eRuntimeError, "denominator cannot be zero");
+			
+			mpq_canonicalize(*q);
 			break;
 		}
 		default: {
@@ -133,6 +138,150 @@ q_negation( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Binary arithmetical operators
+// Addition (+)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_addition( VALUE self, VALUE summand ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *f
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Decides what to do based on the summand's type/class
+	switch (TYPE(summand)) {
+		case T_DATA: {
+			if (rb_obj_class(summand) == cGMPRational) {
+				mpq_t *sr;
+				Data_Get_Struct(summand, mpq_t, sr);
+				mpq_add(*r, *q, *sr);
+			} else {
+				rb_raise(rb_eTypeError, "summand's type is not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "summand's type is not supported");
+		}
+	}
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+
+// Subtraction (-)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_subtraction( VALUE self, VALUE subtrahend ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *f
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Decides what to do based on the subtrahend's type/class
+	switch (TYPE(subtrahend)) {
+		case T_DATA: {
+			if (rb_obj_class(subtrahend) == cGMPRational) {
+				mpq_t *sr;
+				Data_Get_Struct(subtrahend, mpq_t, sr);
+				mpq_sub(*r, *q, *sr);
+			} else {
+				rb_raise(rb_eTypeError, "subtrahend's type is not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "subtrahend's type is not supported");
+		}
+	}
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+
+// Multiplication (*)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_multiplication( VALUE self, VALUE multiplicand ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *f
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Decides what to do based on the multiplicand's type/class
+	switch (TYPE(multiplicand)) {
+		case T_DATA: {
+			if (rb_obj_class(multiplicand) == cGMPRational) {
+				mpq_t *sr;
+				Data_Get_Struct(multiplicand, mpq_t, sr);
+				mpq_mul(*r, *q, *sr);
+			} else {
+				rb_raise(rb_eTypeError, "multiplicand's type is not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "multiplicand's type is not supported");
+		}
+	}
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+
+// Division (/)
+// {GMP::Rational} -> {GMP::Rational}
+static VALUE
+q_division( VALUE self, VALUE divisor ) {
+	// Creates pointers to self's and the result's mpq_t structures
+	mpq_t *r = malloc(sizeof(*r));
+	mpq_t *q;
+	
+	// Loads self into *f
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Inits the result
+	mpq_init(*r);
+	
+	// Decides what to do based on the divisor's type/class
+	switch (TYPE(divisor)) {
+		case T_DATA: {
+			if (rb_obj_class(divisor) == cGMPRational) {
+				mpq_t *sr;
+				Data_Get_Struct(divisor, mpq_t, sr);
+				
+				if (mpq_sgn(*sr) == 0)
+					rb_raise(rb_eRuntimeError, "divided by zero");
+				
+				mpq_div(*r, *q, *sr);
+			} else {
+				rb_raise(rb_eTypeError, "divisor's type is not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "divisor's type is not supported");
+		}
+	}
+	
+	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
+}
+//// end of binary arithmetical operators
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Other operations
 // Efficient swap
 // {GMP::Rational} -> {GMP::Rational}
@@ -167,6 +316,8 @@ q_sign( VALUE self ) {
 //// end of other operations
 ////////////////////////////////////////////////////////////////////
 
+
+
 void
 Init_gmpq() {
 	// Defines the module GMP and class GMP::Rational
@@ -179,6 +330,12 @@ Init_gmpq() {
 	
 	// Conversion methods
 	rb_define_method(cGMPRational, "to_s", q_to_string, -1);
+	
+	// Binary arithmetical operators
+	rb_define_method(cGMPRational, "+", q_addition, 1);
+	rb_define_method(cGMPRational, "-", q_subtraction, 1);
+	rb_define_method(cGMPRational, "*", q_multiplication, 1);
+	rb_define_method(cGMPRational, "/", q_division, 1);
 	
 	// Unary arithmetical operators
 	rb_define_method(cGMPRational, "+@", q_positive, 0);

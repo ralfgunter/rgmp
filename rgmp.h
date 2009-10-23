@@ -144,6 +144,10 @@ extern VALUE q_init(VALUE);
 // Conversion methods
 extern VALUE q_to_string(VALUE, VALUE*, VALUE);
 
+// Binary arithmetical
+extern VALUE q_addition(VALUE, VALUE);
+extern VALUE q_subtraction(VALUE, VALUE);
+
 // Unary arithmetical operators
 extern VALUE q_positive(VALUE, VALUE);
 extern VALUE q_negation(VALUE, VALUE);
