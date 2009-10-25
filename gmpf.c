@@ -761,6 +761,67 @@ f_integer( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Rounding methods
+// Ceil (rounds up)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_ceil( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
+	
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
+	
+	// Inits the result
+	mpf_init(*r);
+	
+	mpf_ceil(*r, *s);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Floor (rounds down)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_floor( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
+	
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
+	
+	// Inits the result
+	mpf_init(*r);
+	
+	mpf_floor(*r, *s);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Truncate (rounds towards zero)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_truncate( VALUE self ) {
+	// Creates pointers to self's and the result's mpf_t structures
+	mpf_t *r = malloc(sizeof(*r));
+	mpf_t *s;
+	
+	// Loads self from Ruby
+	Data_Get_Struct(self, mpf_t, s);
+	
+	// Inits the result
+	mpf_init(*r);
+	
+	mpf_trunc(*r, *s);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of rounding methods
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Other methods
 // Sets the floating point precision for a specific number/object
 // {Fixnum} -> {NilClass}
@@ -851,63 +912,6 @@ f_relative_difference( VALUE self, VALUE other ) {
 	
 	// Does the calculation
 	mpf_reldiff(*r, *f, *o);
-	
-	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
-}
-
-// Ceil (rounds up)
-// {GMP::Float} -> {GMP::Float}
-static VALUE
-f_ceil( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *r = malloc(sizeof(*r));
-	mpf_t *s;
-	
-	// Loads self from Ruby
-	Data_Get_Struct(self, mpf_t, s);
-	
-	// Inits the result
-	mpf_init(*r);
-	
-	mpf_ceil(*r, *s);
-	
-	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
-}
-
-// Floor (rounds down)
-// {GMP::Float} -> {GMP::Float}
-static VALUE
-f_floor( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *r = malloc(sizeof(*r));
-	mpf_t *s;
-	
-	// Loads self from Ruby
-	Data_Get_Struct(self, mpf_t, s);
-	
-	// Inits the result
-	mpf_init(*r);
-	
-	mpf_floor(*r, *s);
-	
-	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
-}
-
-// Truncate (rounds towards zero)
-// {GMP::Float} -> {GMP::Float}
-static VALUE
-f_truncate( VALUE self ) {
-	// Creates pointers to self's and the result's mpf_t structures
-	mpf_t *r = malloc(sizeof(*r));
-	mpf_t *s;
-	
-	// Loads self from Ruby
-	Data_Get_Struct(self, mpf_t, s);
-	
-	// Inits the result
-	mpf_init(*r);
-	
-	mpf_trunc(*r, *s);
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
@@ -1740,6 +1744,29 @@ f_bessel_second_n( VALUE klass, VALUE number, VALUE order ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Rounding methods
+// Rounds to closest (away from zero if halfway from nearest)
+// {GMP::Float} -> {GMP::Float}
+static VALUE
+f_round( VALUE self ) {
+	// Creates pointers to self's and result's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *s;
+	
+	// Loads self
+	Data_Get_Struct(self, mpfr_t, s);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	mpfr_round(*r, *s);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+//// end of rounding methods
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Other methods
 // Factorial
 // {Fixnum} -> {GMP::Float}
@@ -2119,6 +2146,66 @@ f_expm1( VALUE klass, VALUE exponent ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// Maximum value of two given numbers
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}
+static VALUE
+f_maximum_of_two( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's, b's and result's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *ma, *mb;
+	
+	// Loads a and b from Ruby
+	Data_Get_Struct(a, mpfr_t, ma);
+	Data_Get_Struct(b, mpfr_t, mb);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	mpfr_max(*r, *ma, *mb, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Mininum value of two given numbers
+// {GMP::Float}, {GMP::Float} -> {GMP::Float}
+static VALUE
+f_minimum_of_two( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's, b's and result's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *ma, *mb;
+	
+	// Loads a and b from Ruby
+	Data_Get_Struct(a, mpfr_t, ma);
+	Data_Get_Struct(b, mpfr_t, mb);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	mpfr_min(*r, *ma, *mb, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Fractional part of a number
+// {} -> {GMP::Float}
+static VALUE
+f_fractional( VALUE self ) {
+	// Creates pointers to the self's and result's mpfr_t structures
+	mpfr_t *r = malloc(sizeof(*r));
+	mpfr_t *s;
+	
+	// Loads self
+	Data_Get_Struct(self, mpfr_t, s);
+	
+	// Inits the result
+	mpfr_init(*r);
+	
+	
+	mpfr_frac(*r, *s, GMP_RNDN);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
 #endif // MPFR
@@ -2160,15 +2247,17 @@ Init_gmpf() {
 	// Question-like methods
 	rb_define_method(cGMPFloat, "is_integer?", f_integer, 0);
 	
+	// Rounding
+	rb_define_method(cGMPFloat, "ceil", f_ceil, 0);
+	rb_define_method(cGMPFloat, "floor", f_floor, 0);
+	rb_define_method(cGMPFloat, "trunc", f_truncate, 0);
+	
 	// Other methods
 	rb_define_method(cGMPFloat, "precision=", f_set_precision, 1);
 	rb_define_method(cGMPFloat, "precision", f_get_precision, 0);
 	rb_define_method(cGMPFloat, "swap", f_swap, 1);
 	rb_define_method(cGMPFloat, "abs", f_absolute, 0);
 	rb_define_method(cGMPFloat, "relative_diff", f_relative_difference, 1);
-	rb_define_method(cGMPFloat, "ceil", f_ceil, 0);
-	rb_define_method(cGMPFloat, "floor", f_floor, 0);
-	rb_define_method(cGMPFloat, "trunc", f_truncate, 0);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPFloat, "def_precision=", f_set_def_prec, 1);
@@ -2228,6 +2317,9 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "y1", f_bessel_second_1, 1);
 	rb_define_singleton_method(cGMPFloat, "yn", f_bessel_second_n, 2);
 	
+	// Rounding
+	rb_define_method(cGMPFloat, "round", f_round, 0);
+	
 	// Other methods
 	rb_define_singleton_method(cGMPFloat, "fac", f_factorial, 1);
 	rb_define_singleton_method(cGMPFloat, "eint", f_exp_integral, 1);
@@ -2247,6 +2339,9 @@ Init_gmpf() {
 	rb_define_singleton_method(cGMPFloat, "fms", f_fms, 2);
 	rb_define_singleton_method(cGMPFloat, "log1p", f_log1p, 1);
 	rb_define_singleton_method(cGMPFloat, "expm1", f_expm1, 1);
+	rb_define_singleton_method(cGMPFloat, "max", f_maximum_of_two, 2);
+	rb_define_singleton_method(cGMPFloat, "min", f_minimum_of_two, 2);
+	rb_define_method(cGMPFloat, "frac", f_fractional, 0);
 #endif // MPFR
 
 	// Aliases

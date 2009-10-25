@@ -252,6 +252,9 @@ extern VALUE f_bessel_second_0(VALUE, VALUE);
 extern VALUE f_bessel_second_1(VALUE, VALUE);
 extern VALUE f_bessel_second_n(VALUE, VALUE, VALUE);
 
+// Rounding
+extern VALUE f_round(VALUE);
+
 // Other methods
 extern VALUE f_factorial(VALUE, VALUE);
 extern VALUE f_exp_integral(VALUE, VALUE);
@@ -271,4 +274,7 @@ extern VALUE f_fma(VALUE, VALUE, VALUE, VALUE);
 extern VALUE f_fms(VALUE, VALUE, VALUE, VALUE);
 extern VALUE f_log1p(VALUE, VALUE);
 extern VALUE f_expm1(VALUE, VALUE);
+extern VALUE f_maximum_of_two(VALUE, VALUE, VALUE);
+extern VALUE f_minimum_of_two(VALUE, VALUE, VALUE);
+extern VALUE f_fractional(VALUE);
 #endif
