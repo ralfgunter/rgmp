@@ -141,6 +141,34 @@ extern VALUE rational_allocate(VALUE);
 // Class constructor
 extern VALUE q_init(VALUE);
 
+// Conversion methods
+extern VALUE q_to_string(VALUE, VALUE*, VALUE);
+extern VALUE q_to_float(VALUE);
+
+// Binary arithmetical
+extern VALUE q_addition(VALUE, VALUE);
+extern VALUE q_subtraction(VALUE, VALUE);
+extern VALUE q_multiplication(VALUE, VALUE);
+extern VALUE q_division(VALUE, VALUE);
+
+// Unary arithmetical operators
+extern VALUE q_positive(VALUE, VALUE);
+extern VALUE q_negation(VALUE, VALUE);
+
+// Comparisons
+extern VALUE q_equality_test(VALUE, VALUE);
+extern VALUE q_greater_than_test(VALUE, VALUE);
+extern VALUE q_less_than_test(VALUE, VALUE);
+extern VALUE q_greater_than_or_equal_to_test(VALUE, VALUE);
+extern VALUE q_less_than_or_equal_to_test(VALUE, VALUE);
+extern VALUE q_generic_comparison(VALUE, VALUE);
+
+// Other operations
+extern VALUE q_swap(VALUE, VALUE);
+extern VALUE q_sign(VALUE);
+extern VALUE q_absolute(VALUE);
+extern VALUE q_invert(VALUE);
+
 
 
 /* GMP::Float method prototyping */
