@@ -163,7 +163,7 @@ z_addition( VALUE self, VALUE summand ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -215,7 +215,7 @@ z_subtraction( VALUE self, VALUE subtraend ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -266,7 +266,7 @@ z_multiplication( VALUE self, VALUE multiplicand ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -313,7 +313,7 @@ z_division( VALUE self, VALUE dividend ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -366,7 +366,7 @@ z_modulo( VALUE self, VALUE base ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -411,7 +411,7 @@ z_power( VALUE self, VALUE exp ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -474,7 +474,7 @@ z_left_shift( VALUE self, VALUE shift ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -502,7 +502,7 @@ z_right_shift( VALUE self, VALUE shift ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -539,7 +539,7 @@ z_negation( VALUE self ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -626,7 +626,7 @@ z_logic_not( VALUE self ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1231,6 +1231,8 @@ z_multiplication_inplace( VALUE self, VALUE multiplicand ) {
 
 ////////////////////////////////////////////////////////////////////
 //// Question-like methods
+// Does 'base' divide 'self'?
+// {GMP::Integer, Fixnum} -> {TrueClass, FalseClass}
 static VALUE
 z_divisible( VALUE self, VALUE base ) {
 	// Creates a mpz_t pointer and loads self in it
@@ -1411,7 +1413,7 @@ z_absolute( VALUE self ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1429,7 +1431,7 @@ z_next_prime( VALUE self ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1446,6 +1448,8 @@ z_next_prime( VALUE self ) {
 static VALUE
 z_size_in_base( VALUE self, VALUE base ) {
 	// TODO: check why 2 has size 2 in base 3
+	// GMP's manual mentions that it might be off by one, so I wonder if this
+	// method should retain its name...
 	
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1454,9 +1458,9 @@ z_size_in_base( VALUE self, VALUE base ) {
 	// Converts the base from Fixnum to int and checks if its valid
 	int intBase = FIX2INT(base);
 	if (intBase < 2 || intBase > 62)
-		rb_raise(rb_eRuntimeError, "base out of range");
+		rb_raise(rb_eRangeError, "base out of range");
 	
-	unsigned int size = (unsigned int) mpz_sizeinbase(*i, intBase);
+	int size = mpz_sizeinbase(*i, intBase);
 	
 	return INT2FIX(size);
 }
@@ -1486,7 +1490,7 @@ z_next( VALUE self ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1532,7 +1536,7 @@ z_powermod( VALUE klass, VALUE self, VALUE exp, VALUE base ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1614,7 +1618,7 @@ z_sqrt_singleton( VALUE klass, VALUE number ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *n;
 	
-	// Loads self into *f
+	// Loads self into *n
 	Data_Get_Struct(number, mpz_t, n);
 	
 	// Inits the result
@@ -1914,7 +1918,7 @@ z_lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *n;
 	
-	// Loads self into *f
+	// Loads self into *n
 	Data_Get_Struct(number, mpz_t, n);
 	
 	// Inits the result
@@ -1953,7 +1957,7 @@ z_gcd_singleton( VALUE klass, VALUE number, VALUE other ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *n;
 	
-	// Loads self into *f
+	// Loads self into *n
 	Data_Get_Struct(number, mpz_t, n);
 	
 	// Inits the result
