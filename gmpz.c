@@ -2011,6 +2011,54 @@ z_jacobi_singleton( VALUE klass, VALUE a, VALUE b ) {
 	
 	return INT2FIX(result);
 }
+
+// Kronecker symbol
+// {GMP::Integer}, {GMP::Integer} -> {Fixnum}
+static VALUE
+z_kronecker( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's and b's mpz_t structures
+	// Also creates the int placeholder for the result
+	mpz_t *az, *bz;
+	int result;
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(a, mpz_t, az);
+	Data_Get_Struct(b, mpz_t, bz);
+	
+	result = mpz_kronecker(*az, *bz);
+	
+	return INT2FIX(result);
+}
+
+// Greatest Common Divisor - gcd and pair of coefficients (gcd(a,b) = a*s + b*t)
+// {GMP::Integer}, {GMP::Integer} -> {Array <GMP::Integer> (3))
+static VALUE
+z_extended_gcd( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's, b's, and the results' structures.
+	mpz_t *g = malloc(sizeof(*g));
+	mpz_t *s = malloc(sizeof(*s));
+	mpz_t *t = malloc(sizeof(*t));
+	mpz_t *ma, *mb;
+	
+	// Loads a and b
+	Data_Get_Struct(a, mpz_t, ma);
+	Data_Get_Struct(b, mpz_t, mb);
+	
+	// Inits the results
+	mpz_init(*t);
+	mpz_init(*s);
+	mpz_init(*g);
+	
+	// Does the calculation
+	mpz_gcdext(*g, *s, *t, *ma, *mb);
+	
+	// Wraps ther esults into Ruby objects
+	VALUE rt = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, t);
+	VALUE rs = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, s);
+	VALUE rg = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, g);
+	
+	return rb_ary_new3(3, rg, rs, rt);
+}
 //// end of singleton/class methods
 ////////////////////////////////////////////////////////////////////
 
@@ -2106,6 +2154,8 @@ Init_gmpz() {
 	rb_define_singleton_method(cGMPInteger, "lcm", z_lcm_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "gcd", z_gcd_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "jacobi", z_jacobi_singleton, 2);
+	rb_define_singleton_method(cGMPInteger, "kronecker", z_kronecker, 2);
+	rb_define_singleton_method(cGMPInteger, "xgcd", z_extended_gcd, 2);
 
 	// Aliases
 	rb_define_alias(cGMPInteger, "modulo", "%");

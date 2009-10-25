@@ -123,6 +123,8 @@ extern VALUE z_invert_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_lcm_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_gcd_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_jacobi_singleton(VALUE, VALUE, VALUE);
+extern VALUE z_kronecker(VALUE, VALUE, VALUE);
+extern VALUE z_extended_gcd(VALUE, VALUE, VALUE);
 
 
 
