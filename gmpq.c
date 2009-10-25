@@ -293,6 +293,188 @@ q_negation( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Comparison methods
+// Equality (==)
+// {GMP::Rational} -> {TrueClass, FalseClass}
+static VALUE
+q_equality_test( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self in it
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPRational) {
+				mpq_t *od;
+				Data_Get_Struct(other, mpq_t, od);
+				
+				if (mpq_cmp(*q, *od) == 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+}
+
+// Greater than (>)
+// {GMP::Rational} -> {TrueClass, FalseClass}
+static VALUE
+q_greater_than_test( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self in it
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPRational) {
+				mpq_t *od;
+				Data_Get_Struct(other, mpq_t, od);
+				
+				if (mpq_cmp(*q, *od) > 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+}
+
+// Less than (>)
+// {GMP::Rational} -> {TrueClass, FalseClass}
+static VALUE
+q_less_than_test( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self in it
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPRational) {
+				mpq_t *od;
+				Data_Get_Struct(other, mpq_t, od);
+				
+				if (mpq_cmp(*q, *od) < 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+}
+
+// Greater than or equal to (>=)
+// {GMP::Rational} -> {TrueClass, FalseClass}
+static VALUE
+q_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self in it
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPRational) {
+				mpq_t *od;
+				Data_Get_Struct(other, mpq_t, od);
+				
+				if (mpq_cmp(*q, *od) >= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+}
+
+// Less than or equal to (<=)
+// {GMP::Rational} -> {TrueClass, FalseClass}
+static VALUE
+q_less_than_or_equal_to_test( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self in it
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPRational) {
+				mpq_t *od;
+				Data_Get_Struct(other, mpq_t, od);
+				
+				if (mpq_cmp(*q, *od) <= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+}
+
+// Generic comparison (<=>)
+// {GMP::Rational} -> {Fixnum}
+static VALUE
+q_generic_comparison( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self in it
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Immediate responses to avoid one object creation
+	switch (TYPE(other)) {
+		case T_DATA: {
+			if (rb_obj_class(other) == cGMPRational) {
+				mpq_t *od;
+				Data_Get_Struct(other, mpq_t, od);
+				
+				return INT2FIX(mpq_cmp(*q, *od));
+			} else {
+				// I seriously need to start working on these error messages
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
+		default: {
+			rb_raise(rb_eTypeError, "input data type not supported");
+		}
+	}
+}
+//// end of comparison operators
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Other operations
 // Efficient swap
 // {GMP::Rational} -> {GMP::Rational}
@@ -397,6 +579,14 @@ Init_gmpq() {
 	// Unary arithmetical operators
 	rb_define_method(cGMPRational, "+@", q_positive, 0);
 	rb_define_method(cGMPRational, "-@", q_negation, 0);
+	
+	// Comparisons
+	rb_define_method(cGMPRational, "==", q_equality_test, 1);
+	rb_define_method(cGMPRational, ">", q_greater_than_test, 1);
+	rb_define_method(cGMPRational, "<", q_less_than_test, 1);
+	rb_define_method(cGMPRational, ">=", q_greater_than_or_equal_to_test, 1);
+	rb_define_method(cGMPRational, "<=", q_less_than_or_equal_to_test, 1);
+	rb_define_method(cGMPRational, "<=>", q_generic_comparison, 1);
 	
 	// Other operations
 	rb_define_method(cGMPRational, "swap", q_swap, 1);

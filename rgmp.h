@@ -155,6 +155,14 @@ extern VALUE q_division(VALUE, VALUE);
 extern VALUE q_positive(VALUE, VALUE);
 extern VALUE q_negation(VALUE, VALUE);
 
+// Comparisons
+extern VALUE q_equality_test(VALUE, VALUE);
+extern VALUE q_greater_than_test(VALUE, VALUE);
+extern VALUE q_less_than_test(VALUE, VALUE);
+extern VALUE q_greater_than_or_equal_to_test(VALUE, VALUE);
+extern VALUE q_less_than_or_equal_to_test(VALUE, VALUE);
+extern VALUE q_generic_comparison(VALUE, VALUE);
+
 // Other operations
 extern VALUE q_swap(VALUE, VALUE);
 extern VALUE q_sign(VALUE);
