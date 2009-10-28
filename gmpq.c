@@ -82,14 +82,16 @@ q_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 	// The base argument is optional, and can vary from 2 to 36
 	rb_scan_args(argc, argv, "01", &base);
 	
-	// Loads the base into an int, regardless of it having been passed or not
+	// Ensures the base, if present, is a Fixnum
 	if (!FIXNUM_P(base) && !NIL_P(base))
 		rb_raise(rb_eTypeError, "base must be a fixnum");
-	int intBase = FIX2INT(base);
-	
+		
 	// If the base hasn't been defined, this defaults it to 10
+	int intBase;
 	if (base == Qnil)
 		intBase = 10;
+	else
+		intBase = FIX2INT(base);
 	
 	// Checks if the base is within range
 	if (!(intBase >= 2 && intBase <= 36))
