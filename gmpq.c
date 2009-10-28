@@ -18,23 +18,21 @@
 
 #include "gmp.h"
 #include "ruby.h"
-
-static VALUE mGMP;
-static VALUE cGMPRational;
+#include "rgmp.h"
 
 ////////////////////////////////////////////////////////////////////
 //// Fundamental methods
 // Garbage collection
-static void
+void
 rational_mark( mpq_t *q ) {}
 
-static void
+void
 rational_free( mpq_t *q ) {
 	mpq_clear(*q);
 }
 
 // Object allocation
-static VALUE
+VALUE
 rational_allocate( VALUE klass ) {
 	mpq_t *q = malloc(sizeof(mpq_t));
 	mpq_init(*q);
@@ -42,7 +40,7 @@ rational_allocate( VALUE klass ) {
 }
 
 // Class constructor
-static VALUE
+VALUE
 q_init( VALUE self, VALUE ratData ) {
 	// Creates a mpq_t pointer and loads self into it.
 	mpq_t *q;
@@ -72,7 +70,7 @@ q_init( VALUE self, VALUE ratData ) {
 //// Conversion methods
 // To string
 // {} -> {String}
-static VALUE
+VALUE
 q_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 	// Loads self into a mpq_t
 	mpq_t *s;
@@ -106,7 +104,7 @@ q_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 
 // To Float
 // {} -> {Float}
-static VALUE
+VALUE
 q_to_float( VALUE self ) {
 	// Loads self into a mpq_t
 	mpq_t *s;
@@ -121,7 +119,7 @@ q_to_float( VALUE self ) {
 //// Binary arithmetical operators
 // Addition (+)
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_addition( VALUE self, VALUE summand ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -155,7 +153,7 @@ q_addition( VALUE self, VALUE summand ) {
 
 // Subtraction (-)
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_subtraction( VALUE self, VALUE subtrahend ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -189,7 +187,7 @@ q_subtraction( VALUE self, VALUE subtrahend ) {
 
 // Multiplication (*)
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_multiplication( VALUE self, VALUE multiplicand ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -223,7 +221,7 @@ q_multiplication( VALUE self, VALUE multiplicand ) {
 
 // Division (/)
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_division( VALUE self, VALUE divisor ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -265,14 +263,14 @@ q_division( VALUE self, VALUE divisor ) {
 //// Unary arithmetical operators
 // Plus (+a)
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_positive( VALUE self ) {
 	return self;
 }
 
 // Negation (-a)
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_negation( VALUE self ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -296,7 +294,7 @@ q_negation( VALUE self ) {
 //// Comparison methods
 // Equality (==)
 // {GMP::Rational} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 q_equality_test( VALUE self, VALUE other ) {
 	// Creates a mpq_t pointer and loads self in it
 	mpq_t *q;
@@ -326,7 +324,7 @@ q_equality_test( VALUE self, VALUE other ) {
 
 // Greater than (>)
 // {GMP::Rational} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 q_greater_than_test( VALUE self, VALUE other ) {
 	// Creates a mpq_t pointer and loads self in it
 	mpq_t *q;
@@ -356,7 +354,7 @@ q_greater_than_test( VALUE self, VALUE other ) {
 
 // Less than (>)
 // {GMP::Rational} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 q_less_than_test( VALUE self, VALUE other ) {
 	// Creates a mpq_t pointer and loads self in it
 	mpq_t *q;
@@ -386,7 +384,7 @@ q_less_than_test( VALUE self, VALUE other ) {
 
 // Greater than or equal to (>=)
 // {GMP::Rational} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 q_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Creates a mpq_t pointer and loads self in it
 	mpq_t *q;
@@ -416,7 +414,7 @@ q_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 
 // Less than or equal to (<=)
 // {GMP::Rational} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 q_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Creates a mpq_t pointer and loads self in it
 	mpq_t *q;
@@ -446,7 +444,7 @@ q_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 
 // Generic comparison (<=>)
 // {GMP::Rational} -> {Fixnum}
-static VALUE
+VALUE
 q_generic_comparison( VALUE self, VALUE other ) {
 	// Creates a mpq_t pointer and loads self in it
 	mpq_t *q;
@@ -475,10 +473,47 @@ q_generic_comparison( VALUE self, VALUE other ) {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+//// Numerator and denominator accessors
+// Creates a new GMP::Integer object with the initial value of self's numerator
+// {} -> {GMP::Integer}
+VALUE
+q_get_numerator( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self into it.
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Creates and initializes the result.
+	mpz_t *z = malloc(sizeof(*z));
+	mpz_init(*z);
+	
+	mpq_get_num(*z, *q);
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, z);
+}
+
+// Creates a new GMP::Integer object with the initial value
+// of self's denominator
+// {} -> {GMP::Integer}
+VALUE
+q_get_denominator( VALUE self, VALUE other ) {
+	// Creates a mpq_t pointer and loads self into it.
+	mpq_t *q;
+	Data_Get_Struct(self, mpq_t, q);
+	
+	// Creates and initializes the result.
+	mpz_t *z = malloc(sizeof(*z));
+	mpz_init(*z);
+	
+	mpq_get_den(*z, *q);
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, z);
+}
+//// end of comparison operators
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 //// Other operations
 // Efficient swap
 // {GMP::Rational} -> {GMP::Rational}
-static VALUE
+VALUE
 q_swap( VALUE self, VALUE other ) {
 	// Creates pointers to self's and other's mpq_t structures
 	mpq_t *q, *o;
@@ -495,7 +530,7 @@ q_swap( VALUE self, VALUE other ) {
 
 // Sign
 // {GMP::Rational} -> {Fixnum}
-static VALUE
+VALUE
 q_sign( VALUE self ) {
 	// Loads self into a mpq_t
 	mpq_t *s;
@@ -509,7 +544,7 @@ q_sign( VALUE self ) {
 
 // Absolute value
 // {} -> {GMP::Rational}
-static VALUE
+VALUE
 q_absolute( VALUE self ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -529,7 +564,7 @@ q_absolute( VALUE self ) {
 
 // Inversion (1/self)
 // {} -> {GMP::Rational}
-static VALUE
+VALUE
 q_invert( VALUE self ) {
 	// Creates pointers to self's and the result's mpq_t structures
 	mpq_t *r = malloc(sizeof(*r));
@@ -560,6 +595,7 @@ void
 Init_gmpq() {
 	// Defines the module GMP and class GMP::Rational
 	mGMP = rb_define_module("GMP");
+	cGMPInteger = rb_define_class_under(mGMP, "Integer", rb_cObject);
 	cGMPRational = rb_define_class_under(mGMP, "Rational", rb_cObject);
 	
 	// Book keeping and the constructor method
@@ -587,6 +623,12 @@ Init_gmpq() {
 	rb_define_method(cGMPRational, ">=", q_greater_than_or_equal_to_test, 1);
 	rb_define_method(cGMPRational, "<=", q_less_than_or_equal_to_test, 1);
 	rb_define_method(cGMPRational, "<=>", q_generic_comparison, 1);
+	
+	// Numerator and denominator accessors
+	rb_define_method(cGMPRational, "num", q_get_numerator, 0);
+	rb_define_method(cGMPRational, "den", q_get_denominator, 0);
+//	rb_define_method(cGMPRational, "ref_num", q_getref_numerator, 0);
+//	rb_define_method(cGMPRational, "ref_den", q_getref_denominator, 0);
 	
 	// Other operations
 	rb_define_method(cGMPRational, "swap", q_swap, 1);
