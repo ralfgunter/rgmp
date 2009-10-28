@@ -179,8 +179,8 @@ extern VALUE q_invert(VALUE);
 extern void Init_gmpf();
 
 // Garbage collection
-extern VALUE float_mark(mpz_t*);
-extern VALUE float_free(mpz_t*);
+extern void float_mark(mpf_t*);
+extern void float_free(mpf_t*);
 
 // Object allocation
 extern VALUE float_allocate(VALUE);
@@ -216,9 +216,9 @@ extern VALUE f_integer(VALUE);
 
 // Other methods
 extern VALUE f_set_precision(VALUE, VALUE);
-extern VALUE f_get_precision(VALUE, VALUE);
+extern VALUE f_get_precision(VALUE);
 extern VALUE f_swap(VALUE, VALUE);
-extern VALUE f_absolute(VALUE, VALUE);
+extern VALUE f_absolute(VALUE);
 extern VALUE f_relative_difference(VALUE, VALUE);
 extern VALUE f_ceil(VALUE);
 extern VALUE f_floor(VALUE);
@@ -227,7 +227,7 @@ extern VALUE f_truncate(VALUE);
 // Singletons/Class methods
 extern VALUE f_set_def_prec(VALUE, VALUE);
 extern VALUE f_get_def_prec(VALUE);
-extern VALUE f_sqrt_singleton(VALUE);
+extern VALUE f_sqrt_singleton(VALUE, VALUE);
 
 #ifdef MPFR
 // Question-like methods
