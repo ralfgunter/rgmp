@@ -141,7 +141,7 @@ extern void rational_free(mpq_t*);
 extern VALUE rational_allocate(VALUE);
 
 // Class constructor
-extern VALUE q_init(VALUE);
+extern VALUE q_init(VALUE, VALUE);
 
 // Conversion methods
 extern VALUE q_to_string(VALUE, VALUE*, VALUE);
@@ -154,8 +154,8 @@ extern VALUE q_multiplication(VALUE, VALUE);
 extern VALUE q_division(VALUE, VALUE);
 
 // Unary arithmetical operators
-extern VALUE q_positive(VALUE, VALUE);
-extern VALUE q_negation(VALUE, VALUE);
+extern VALUE q_positive(VALUE);
+extern VALUE q_negation(VALUE);
 
 // Comparisons
 extern VALUE q_equality_test(VALUE, VALUE);
