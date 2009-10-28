@@ -18,23 +18,21 @@
 
 #include "gmp.h"
 #include "ruby.h"
-
-static VALUE mGMP;
-static VALUE cGMPInteger;
+#include "rgmp.h"
 
 ////////////////////////////////////////////////////////////////////
 //// Fundamental methods
 // Garbage collection
-static void
+void
 integer_mark( mpz_t *i ) {}
 
-static void
+void
 integer_free( mpz_t *i ) {
 	mpz_clear(*i);
 }
 
 // Object allocation
-static VALUE
+VALUE
 integer_allocate( VALUE klass ) {
 	mpz_t *i = malloc(sizeof(mpz_t));
 	mpz_init(*i);
@@ -42,7 +40,7 @@ integer_allocate( VALUE klass ) {
 }
 
 // Class constructor
-static VALUE
+VALUE
 z_init( VALUE self, VALUE intData ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -91,7 +89,7 @@ z_init( VALUE self, VALUE intData ) {
 //// Conversion methods (from C types to Ruby classes)
 // To String
 // {Fixnum} -> {String}
-static VALUE
+VALUE
 z_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 	// Creates pointers for self and the final string
 	mpz_t *s;
@@ -103,14 +101,16 @@ z_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 	// The base argument is optional, and can vary from 2 to 62 and -2 to -36
 	rb_scan_args(argc, argv, "01", &base);
 	
-	// Loads the base into an int, regardless of it having been passed or not
+	// Ensures the base, if present, is a Fixnum
 	if (!FIXNUM_P(base) && !NIL_P(base))
 		rb_raise(rb_eTypeError, "base must be a fixnum");
-	int intBase = FIX2INT(base);
-	
+		
 	// If the base hasn't been defined, this defaults it to 10
+	int intBase;
 	if (base == Qnil)
 		intBase = 10;
+	else
+		intBase = FIX2INT(base);
 	
 	// Checks if the base is within range
 	if ((intBase < 2 && intBase > -2) || (intBase < -36) || (intBase > 62))
@@ -124,7 +124,7 @@ z_to_string( VALUE argc, VALUE *argv, VALUE self ) {
 }
 
 // To Fixnum/Bignum
-static VALUE
+VALUE
 z_to_integer( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -140,7 +140,7 @@ z_to_integer( VALUE self ) {
 }
 
 // To Float (double-precision floating point number)
-static VALUE
+VALUE
 z_to_float( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -157,13 +157,13 @@ z_to_float( VALUE self ) {
 //// Binary arithmetical operators (operations taking two values)
 // Addition (+)
 // {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_addition( VALUE self, VALUE summand ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -209,13 +209,13 @@ z_addition( VALUE self, VALUE summand ) {
 
 // Subtraction (-)
 // {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_subtraction( VALUE self, VALUE subtraend ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -260,13 +260,13 @@ z_subtraction( VALUE self, VALUE subtraend ) {
 
 // Multiplication (*)
 // {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_multiplication( VALUE self, VALUE multiplicand ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -307,13 +307,13 @@ z_multiplication( VALUE self, VALUE multiplicand ) {
 
 // Division (/)
 // {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_division( VALUE self, VALUE dividend ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -360,13 +360,13 @@ z_division( VALUE self, VALUE dividend ) {
 
 // Modulo (from modular arithmetic) (%)
 // {GMP::Integer, Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_modulo( VALUE self, VALUE base ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -405,13 +405,13 @@ z_modulo( VALUE self, VALUE base ) {
 
 // Exponetiation (**)
 // {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_power( VALUE self, VALUE exp ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -466,7 +466,7 @@ z_power( VALUE self, VALUE exp ) {
 
 // Left shift (also multiplication by a power of 2)
 // {Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_left_shift( VALUE self, VALUE shift ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	// Also creates a placeholder for the shift amount
@@ -474,7 +474,7 @@ z_left_shift( VALUE self, VALUE shift ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -494,7 +494,7 @@ z_left_shift( VALUE self, VALUE shift ) {
 
 // Right shift (also division by a power of 2)
 // {Fixnum, Bignum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_right_shift( VALUE self, VALUE shift ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	// Also creates a placeholder for the shift amount
@@ -502,7 +502,7 @@ z_right_shift( VALUE self, VALUE shift ) {
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -526,20 +526,20 @@ z_right_shift( VALUE self, VALUE shift ) {
 //// Unary arithmetical operators (operations over a single value)
 // Plus (+a)
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_positive( VALUE self ) {
 	return self;
 }
 
 // Negation (-a)
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_negation( VALUE self ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -557,7 +557,7 @@ z_negation( VALUE self ) {
 //// Logic operators
 // Logic AND (&)
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_logic_and( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
@@ -578,7 +578,7 @@ z_logic_and( VALUE self, VALUE other ) {
 
 // Logic OR (inclusive OR) (|)
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_logic_ior( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
@@ -599,7 +599,7 @@ z_logic_ior( VALUE self, VALUE other ) {
 
 // Logic XOR (exclusive OR) (^)
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE 
+VALUE 
 z_logic_xor( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
@@ -620,13 +620,13 @@ z_logic_xor( VALUE self, VALUE other ) {
 
 // Logic NOT (~)
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_logic_not( VALUE self ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -644,7 +644,7 @@ z_logic_not( VALUE self ) {
 //// Comparison methods
 // Equality (==)
 // {GMP::Integer} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_equality_test( VALUE self, VALUE other ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -703,7 +703,7 @@ z_equality_test( VALUE self, VALUE other ) {
 
 // Greater than (>)
 // {GMP::Integer} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_greater_than_test( VALUE self, VALUE other ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -758,7 +758,7 @@ z_greater_than_test( VALUE self, VALUE other ) {
 
 // Less than (<)
 // {GMP::Integer} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_less_than_test( VALUE self, VALUE other ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -813,7 +813,7 @@ z_less_than_test( VALUE self, VALUE other ) {
 
 // Greater than or equal to (>=)
 // {GMP::Integer} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -868,7 +868,7 @@ z_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 
 // Less than or equal to (<=)
 // {GMP::Integer} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -923,7 +923,7 @@ z_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 
 // Generic comparison (<=>)
 // {GMP::Integer} -> {Fixnum}
-static VALUE
+VALUE
 z_generic_comparison( VALUE self, VALUE other ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -970,7 +970,7 @@ z_generic_comparison( VALUE self, VALUE other ) {
 //// Inplace methods (the caller inherits the result)
 // (probably) Sets self as the next prime greater than itself
 // {} -> {GMP::Integer}
-static VALUE
+VALUE
 z_next_prime_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -983,7 +983,7 @@ z_next_prime_inplace( VALUE self ) {
 
 // Absolute value
 // {} -> {GMP::Integer}
-static VALUE
+VALUE
 z_absolute_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -996,7 +996,7 @@ z_absolute_inplace( VALUE self ) {
 
 // Negation
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_negation_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1009,7 +1009,7 @@ z_negation_inplace( VALUE self ) {
 
 // Square root (instance method)
 // {} -> {GMP::Integer}
-static VALUE
+VALUE
 z_sqrt_inplace( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1022,7 +1022,7 @@ z_sqrt_inplace( VALUE self ) {
 
 // Nth root (instance method)
 // {Fixnum, Bignum} -> {NilClass}
-static VALUE
+VALUE
 z_root_inplace( VALUE self, VALUE degree ) {
 	// Creates a mpz_t pointer and loads self in it
 	// Also loads degree into an unsigned long
@@ -1041,7 +1041,7 @@ z_root_inplace( VALUE self, VALUE degree ) {
 
 // Inversion (number theory; a*ã == 1 (mod m))
 // {GMP::Integer} -> {NilClass}
-static VALUE
+VALUE
 z_invert_inplace( VALUE self, VALUE base ) {
 	// Creates pointers for self's and base's mpz_t structures
 	// Also creates an int which will be used to check if the number has an
@@ -1063,7 +1063,7 @@ z_invert_inplace( VALUE self, VALUE base ) {
 
 // Setting a specific bit
 // {Fixnum, Bignum}, {Fixnum} -> {NilClass}
-static VALUE
+VALUE
 z_set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 	// Creates a pointer for self's mpz_t structure and two unsigned long
 	// for the bit index and desired bit value
@@ -1099,7 +1099,7 @@ z_set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 
 // Addition
 // {GMP::Integer, Fixnum, Bignum} -> {}
-static VALUE
+VALUE
 z_addition_inplace( VALUE self, VALUE summand ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1144,7 +1144,7 @@ z_addition_inplace( VALUE self, VALUE summand ) {
 
 // Subtraction
 // {GMP::Integer, Fixnum, Bignum} -> {}
-static VALUE
+VALUE
 z_subtraction_inplace( VALUE self, VALUE subtraend ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1188,7 +1188,7 @@ z_subtraction_inplace( VALUE self, VALUE subtraend ) {
 
 // Multiplication
 // {GMP::Integer, Fixnum, Bignum} -> {}
-static VALUE
+VALUE
 z_multiplication_inplace( VALUE self, VALUE multiplicand ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1231,7 +1231,9 @@ z_multiplication_inplace( VALUE self, VALUE multiplicand ) {
 
 ////////////////////////////////////////////////////////////////////
 //// Question-like methods
-static VALUE
+// Does 'base' divide 'self'?
+// {GMP::Integer, Fixnum} -> {TrueClass, FalseClass}
+VALUE
 z_divisible( VALUE self, VALUE base ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1269,7 +1271,7 @@ z_divisible( VALUE self, VALUE base ) {
 	return result;
 }
 
-static VALUE
+VALUE
 z_perfect_power( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1284,7 +1286,7 @@ z_perfect_power( VALUE self ) {
 		return Qtrue;
 }
 
-static VALUE
+VALUE
 z_perfect_square( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1299,7 +1301,7 @@ z_perfect_square( VALUE self ) {
 		return Qtrue;
 }
 
-static VALUE
+VALUE
 z_probable_prime( VALUE self, VALUE numberOfTests ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1320,7 +1322,7 @@ z_probable_prime( VALUE self, VALUE numberOfTests ) {
 		return Qtrue;
 }
 
-static VALUE
+VALUE
 z_even( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1335,7 +1337,7 @@ z_even( VALUE self ) {
 		return Qfalse;
 }
 
-static VALUE
+VALUE
 z_odd( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1352,7 +1354,7 @@ z_odd( VALUE self ) {
 
 // Precise equality (checks the class as well)
 // {GMP::Integer} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_precise_equality( VALUE self, VALUE other ) {
 	// Makes sure other's class is also GMP::Integer
 	if (! rb_obj_class(other) == cGMPInteger)
@@ -1373,7 +1375,7 @@ z_precise_equality( VALUE self, VALUE other ) {
 
 // Is it zero?
 // {} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_zero( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1387,7 +1389,7 @@ z_zero( VALUE self ) {
 
 // Or is it not zero?
 // {} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 z_nonzero( VALUE self ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1405,13 +1407,13 @@ z_nonzero( VALUE self ) {
 //// Other operations
 // Absolute value
 // {} -> {GMP::Integer}
-static VALUE
+VALUE
 z_absolute( VALUE self ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1423,13 +1425,13 @@ z_absolute( VALUE self ) {
 	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
-static VALUE
+VALUE
 z_next_prime( VALUE self ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1443,9 +1445,11 @@ z_next_prime( VALUE self ) {
 
 // Number of digits in a specific base
 // {GMP::Integer}, {Fixnum} -> {Fixnum}
-static VALUE
+VALUE
 z_size_in_base( VALUE self, VALUE base ) {
 	// TODO: check why 2 has size 2 in base 3
+	// GMP's manual mentions that it might be off by one, so I wonder if this
+	// method should retain its name...
 	
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
@@ -1454,16 +1458,16 @@ z_size_in_base( VALUE self, VALUE base ) {
 	// Converts the base from Fixnum to int and checks if its valid
 	int intBase = FIX2INT(base);
 	if (intBase < 2 || intBase > 62)
-		rb_raise(rb_eRuntimeError, "base out of range");
+		rb_raise(rb_eRangeError, "base out of range");
 	
-	unsigned int size = (unsigned int) mpz_sizeinbase(*i, intBase);
+	int size = mpz_sizeinbase(*i, intBase);
 	
 	return INT2FIX(size);
 }
 
 // Efficient swap
 // {GMP::Integer}, {GMP::Integer} -> {GMP::Integer}, {GMP::Integer}
-static VALUE
+VALUE
 z_swap( VALUE self, VALUE other ) {
 	// Creates pointers to self's and other's mpz_t structures
 	mpz_t *i, *o;
@@ -1480,13 +1484,13 @@ z_swap( VALUE self, VALUE other ) {
 
 // Next integer
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_next( VALUE self ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1500,7 +1504,7 @@ z_next( VALUE self ) {
 
 // Gets the specific bit
 // {Fixnum, Bignum} -> {Fixnum}
-static VALUE
+VALUE
 z_get_bit( VALUE self, VALUE index ) {
 	// Creates a pointer for self's mpz_t structures and two unsigned long
 	// for the bit index and desired bit value
@@ -1526,13 +1530,13 @@ z_get_bit( VALUE self, VALUE index ) {
 //// Singletons/Class methods
 // Exponetiation with modulo (powermod)
 // {GMP::Integer, Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_powermod( VALUE klass, VALUE self, VALUE exp, VALUE base ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *i;
 	
-	// Loads self into *f
+	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
 	// Inits the result
@@ -1608,13 +1612,13 @@ z_powermod( VALUE klass, VALUE self, VALUE exp, VALUE base ) {
 
 // Square root
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_sqrt_singleton( VALUE klass, VALUE number ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *n;
 	
-	// Loads self into *f
+	// Loads self into *n
 	Data_Get_Struct(number, mpz_t, n);
 	
 	// Inits the result
@@ -1632,7 +1636,7 @@ z_sqrt_singleton( VALUE klass, VALUE number ) {
 
 // Nth root
 // {GMP::Integer}, {Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	// Creates pointers to number's and the result's mpz_t structures
 	// Also, creates the degree placeholder
@@ -1665,7 +1669,7 @@ z_root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 
 // Fibonacci numbers generator
 // {Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_fibonacci_singleton( VALUE klass, VALUE index ) {
 	// Creates pointer to the result's mpz_t structure, and loads
 	// creates a placeholder for the index
@@ -1685,7 +1689,7 @@ z_fibonacci_singleton( VALUE klass, VALUE index ) {
 
 // Fibonacci pairs generator
 // {Fixnum} -> {Array <GMP::Integer> (2)}
-static VALUE
+VALUE
 z_fibonacci2_singleton( VALUE klass, VALUE index ) {
 	// Creates placeholders for the two results
 	mpz_t *x = malloc(sizeof(*x));
@@ -1710,7 +1714,7 @@ z_fibonacci2_singleton( VALUE klass, VALUE index ) {
 
 // Lucas numbers generator
 // {Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_lucas_singleton( VALUE klass, VALUE index ) {
 	// Creates pointer to the result's mpz_t structure, and loads
 	// creates a placeholder for the index
@@ -1730,7 +1734,7 @@ z_lucas_singleton( VALUE klass, VALUE index ) {
 
 // Lucas pairs generator
 // {Fixnum} -> {Array <GMP::Integer> (2)}
-static VALUE
+VALUE
 z_lucas2_singleton( VALUE klass, VALUE index ) {
 	// Creates placeholders for the two results
 	mpz_t *x = malloc(sizeof(*x));
@@ -1755,7 +1759,7 @@ z_lucas2_singleton( VALUE klass, VALUE index ) {
 
 // Factorial (n!)
 // {Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_factorial_singleton( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's mpz_t structure, and loads
 	// creates a placeholder for the number
@@ -1776,7 +1780,7 @@ z_factorial_singleton( VALUE klass, VALUE number ) {
 // Binomial coefficient/Combination (combinatorics)
 // {GMP::Integer}, {Fixnum} -> {GMP::Integer}
 // TODO: check whether N and K have names
-static VALUE
+VALUE
 z_binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 	// Checks whether k has a valid type
 	if (TYPE(k) != T_FIXNUM)
@@ -1817,7 +1821,7 @@ z_binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 // Factor removal (divides exhaustively by one factor until no longer possible)
 // {GMP::Integer}, {GMP::Integer} -> {GMP::Integer}
 // TODO: decide how (and if) to handle mpz_remove's output
-static VALUE
+VALUE
 z_remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	// Creates pointers to the number's, factor's and result's mpz_t
 	// structures
@@ -1841,7 +1845,7 @@ z_remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 
 // Comparison of absolutes
 // {GMP::Integer}, {GMP::Integer, Fixnum} -> {Fixnum}
-static VALUE
+VALUE
 z_comp_abs_singleton( VALUE klass, VALUE number, VALUE other ) {
 	// Creates pointers to the number's mpz_t structures
 	// Also creates the int placeholder for the result
@@ -1881,7 +1885,7 @@ z_comp_abs_singleton( VALUE klass, VALUE number, VALUE other ) {
 
 // Inversion (number theory; a*ã == 1 (mod m))
 // {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_invert_singleton( VALUE klass, VALUE number, VALUE base ) {
 	// Creates pointers to the number's, base's and result's mpz_t
 	// structures
@@ -1908,13 +1912,13 @@ z_invert_singleton( VALUE klass, VALUE number, VALUE base ) {
 
 // Least common multiple
 // {GMP::Integer}, {GMP::Integer, Fixnum} -> {GMP::Integer}
-static VALUE
+VALUE
 z_lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *n;
 	
-	// Loads self into *f
+	// Loads self into *n
 	Data_Get_Struct(number, mpz_t, n);
 	
 	// Inits the result
@@ -1947,13 +1951,13 @@ z_lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 
 // Greatest common divisor
 // {GMP::Integer}, {GMP::Integer} -> {GMP::Integer}
-static VALUE
+VALUE
 z_gcd_singleton( VALUE klass, VALUE number, VALUE other ) {
 	// Creates pointers to self's and the result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
 	mpz_t *n;
 	
-	// Loads self into *f
+	// Loads self into *n
 	Data_Get_Struct(number, mpz_t, n);
 	
 	// Inits the result
@@ -1986,7 +1990,7 @@ z_gcd_singleton( VALUE klass, VALUE number, VALUE other ) {
 
 // Jacobi symbol
 // {GMP::Integer}, {GMP::Integer} -> {Fixnum}
-static VALUE
+VALUE
 z_jacobi_singleton( VALUE klass, VALUE a, VALUE b ) {
 	// Creates pointers to a's and b's mpz_t structures
 	// Also creates the int placeholder for the result
@@ -2006,6 +2010,54 @@ z_jacobi_singleton( VALUE klass, VALUE a, VALUE b ) {
 	result = mpz_jacobi(*az, *bz);
 	
 	return INT2FIX(result);
+}
+
+// Kronecker symbol
+// {GMP::Integer}, {GMP::Integer} -> {Fixnum}
+VALUE
+z_kronecker( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's and b's mpz_t structures
+	// Also creates the int placeholder for the result
+	mpz_t *az, *bz;
+	int result;
+	
+	// Copies back the mpz_t pointers wrapped in ruby data objects
+	Data_Get_Struct(a, mpz_t, az);
+	Data_Get_Struct(b, mpz_t, bz);
+	
+	result = mpz_kronecker(*az, *bz);
+	
+	return INT2FIX(result);
+}
+
+// Greatest Common Divisor - gcd and pair of coefficients (gcd(a,b) = a*s + b*t)
+// {GMP::Integer}, {GMP::Integer} -> {Array <GMP::Integer> (3))
+VALUE
+z_extended_gcd( VALUE klass, VALUE a, VALUE b ) {
+	// Creates pointers to a's, b's, and the results' structures.
+	mpz_t *g = malloc(sizeof(*g));
+	mpz_t *s = malloc(sizeof(*s));
+	mpz_t *t = malloc(sizeof(*t));
+	mpz_t *ma, *mb;
+	
+	// Loads a and b
+	Data_Get_Struct(a, mpz_t, ma);
+	Data_Get_Struct(b, mpz_t, mb);
+	
+	// Inits the results
+	mpz_init(*t);
+	mpz_init(*s);
+	mpz_init(*g);
+	
+	// Does the calculation
+	mpz_gcdext(*g, *s, *t, *ma, *mb);
+	
+	// Wraps ther esults into Ruby objects
+	VALUE rt = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, t);
+	VALUE rs = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, s);
+	VALUE rg = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, g);
+	
+	return rb_ary_new3(3, rg, rs, rt);
 }
 //// end of singleton/class methods
 ////////////////////////////////////////////////////////////////////
@@ -2102,6 +2154,8 @@ Init_gmpz() {
 	rb_define_singleton_method(cGMPInteger, "lcm", z_lcm_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "gcd", z_gcd_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "jacobi", z_jacobi_singleton, 2);
+	rb_define_singleton_method(cGMPInteger, "kronecker", z_kronecker, 2);
+	rb_define_singleton_method(cGMPInteger, "xgcd", z_extended_gcd, 2);
 
 	// Aliases
 	rb_define_alias(cGMPInteger, "modulo", "%");
