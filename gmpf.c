@@ -18,28 +18,26 @@
 
 #include "gmp.h"
 #include "ruby.h"
+#include "rgmp.h"
 
 #ifdef MPFR
 #include "mpfr.h"
 #include "mpf2mpfr.h"
 #endif
 
-static VALUE mGMP;
-static VALUE cGMPFloat;
-
 ////////////////////////////////////////////////////////////////////
 //// Fundamental methods
 // Garbage collection
-static void
+void
 float_mark( mpf_t *f ) {}
 
-static void
+void
 float_free( mpf_t *f ) {
 	mpf_clear(*f);
 }
 
 // Object allocation
-static VALUE
+VALUE
 float_allocate( VALUE klass ) {
 	mpf_t *f = malloc(sizeof(mpf_t));
 	mpf_init(*f);
@@ -48,7 +46,7 @@ float_allocate( VALUE klass ) {
 
 // Class constructor
 // Precision must be a Fixnum
-static VALUE
+VALUE
 f_init( VALUE argc, VALUE *argv, VALUE self ) {
 	// Creates a mpf_t pointer for the new object
 	mpf_t *s;
@@ -100,7 +98,7 @@ f_init( VALUE argc, VALUE *argv, VALUE self ) {
 //// Conversion methods (from C types to Ruby classes)
 // To String
 // Not yet working (we must place the dot in there somewhere)
-static VALUE
+VALUE
 f_to_string( VALUE self ) {
 	// Creates a mpf_t pointer and loads self into it
 	mpf_t *s;
@@ -118,7 +116,7 @@ f_to_string( VALUE self ) {
 
 // To Float
 // {GMP::Float} -> {Float}
-static VALUE
+VALUE
 f_to_float( VALUE self ) {
 	// Creates a mpf_t pointer and loads self into it
 	mpf_t *s;
@@ -136,7 +134,7 @@ f_to_float( VALUE self ) {
 //// Binary arithmetical operators
 // Addition (+)
 // {GMP::Float, Float, Fixnum, Bignum} -> {GMP::Float}
-static VALUE
+VALUE
 f_addition( VALUE self, VALUE summand ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -199,7 +197,7 @@ f_addition( VALUE self, VALUE summand ) {
 
 // Subtraction (-)
 // {GMP::Float, Float, Fixnum, Bignum} -> {GMP::Float}
-static VALUE
+VALUE
 f_subtraction( VALUE self, VALUE subtraend ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -262,7 +260,7 @@ f_subtraction( VALUE self, VALUE subtraend ) {
 
 // Multiplication (*)
 // {GMP::Float, Float, Fixnum, Bignum} -> {GMP::Float}
-static VALUE
+VALUE
 f_multiplication( VALUE self, VALUE multiplicand ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -321,7 +319,7 @@ f_multiplication( VALUE self, VALUE multiplicand ) {
 
 // Division (/)
 // {GMP::Float, Float, Fixnum, Bignum} -> {GMP::Float}
-static VALUE
+VALUE
 f_division( VALUE self, VALUE dividend ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -381,7 +379,7 @@ f_division( VALUE self, VALUE dividend ) {
 // Exponentiation (**)
 // {Fixnum} -> {GMP::Float}
 // TODO: incorporate MPFR
-static VALUE
+VALUE
 f_power( VALUE self, VALUE exponent ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -407,14 +405,14 @@ f_power( VALUE self, VALUE exponent ) {
 //// Unary arithmetical operators (operations over a single value)
 // Plus (+a)
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_positive( VALUE self ) {
 	return self;
 }
 
 // Negation (-a)
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_negation( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -438,7 +436,7 @@ f_negation( VALUE self ) {
 //// Comparison methods
 // Equality (==)
 // {GMP::Float, Float} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_equality_test( VALUE self, VALUE other ) {
 	// Creates a mpf_t pointer and loads self in it
 	mpf_t *f;
@@ -483,7 +481,7 @@ f_equality_test( VALUE self, VALUE other ) {
 
 // Greater than (>)
 // {GMP::Float, Float} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_greater_than_test( VALUE self, VALUE other ) {
 	// Creates a mpf_t pointer and loads self in it
 	mpf_t *f;
@@ -528,7 +526,7 @@ f_greater_than_test( VALUE self, VALUE other ) {
 
 // Less than (>)
 // {GMP::Float, Float} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_less_than_test( VALUE self, VALUE other ) {
 	// Creates a mpf_t pointer and loads self in it
 	mpf_t *f;
@@ -573,7 +571,7 @@ f_less_than_test( VALUE self, VALUE other ) {
 
 // Greater than or equal to (>=)
 // {GMP::Float, Float} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Creates a mpf_t pointer and loads self in it
 	mpf_t *f;
@@ -618,7 +616,7 @@ f_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 
 // Less than or equal to (<=)
 // {GMP::Float, Float} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Creates a mpf_t pointer and loads self in it
 	mpf_t *f;
@@ -663,7 +661,7 @@ f_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 
 // Generic comparison (<=>)
 // {GMP::Float, Float} -> {Fixnum}
-static VALUE
+VALUE
 f_generic_comparison( VALUE self, VALUE other ) {
 	// Creates a mpf_t pointer and loads self in it
 	mpf_t *f;
@@ -706,7 +704,7 @@ f_generic_comparison( VALUE self, VALUE other ) {
 //// Question-like methods
 // Is it an integer?
 // {} -> {TrueClass, FalseClass)
-static VALUE
+VALUE
 f_integer( VALUE self ) {
 	// Creates a mpf_t pointer and loads self into it
 	mpf_t *s;
@@ -724,7 +722,7 @@ f_integer( VALUE self ) {
 //// Other methods
 // Sets the floating point precision for a specific number/object
 // {GMP::Integer}, {Fixnum, Bignum} -> {NilClass}
-static VALUE
+VALUE
 f_set_precision( VALUE self, VALUE precision ) {
 	// Creates a mpf_t pointer and loads self in it.
 	// Also loads the precision into an unsigned long.
@@ -742,7 +740,7 @@ f_set_precision( VALUE self, VALUE precision ) {
 // Careful with frequent access to this variable, since it needs to
 // create a Fixnum object every time it's called.
 // {} -> {Fixnum}
-static VALUE
+VALUE
 f_get_precision( VALUE self, VALUE precision ) {
 	// Creates a mpf_t pointer and loads self in it.
 	// Also creates a placeholder for the precision.
@@ -758,7 +756,7 @@ f_get_precision( VALUE self, VALUE precision ) {
 
 // Efficient swap
 // {GMP::Float}, {GMP::Float} -> {GMP::Float}, {GMP::Float}
-static VALUE
+VALUE
 f_swap( VALUE self, VALUE other ) {
 	// Creates pointers to self's and other's mpf_t structures
 	mpf_t *f, *o;
@@ -775,7 +773,7 @@ f_swap( VALUE self, VALUE other ) {
 
 // Absolute value
 // {} -> {GMP::Float}
-static VALUE
+VALUE
 f_absolute( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -795,7 +793,7 @@ f_absolute( VALUE self ) {
 
 // Relative difference ( |a - b|/a )
 // {GMP::Float, GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_relative_difference( VALUE self, VALUE other ) {
 	// Creates pointers to self's, other's and result's mpf_t structures
 	mpf_t *f, *o;
@@ -816,7 +814,7 @@ f_relative_difference( VALUE self, VALUE other ) {
 
 // Ceil (rounds up)
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_ceil( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -835,7 +833,7 @@ f_ceil( VALUE self ) {
 
 // Floor (rounds down)
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_floor( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -854,7 +852,7 @@ f_floor( VALUE self ) {
 
 // Truncate (rounds towards zero)
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_truncate( VALUE self ) {
 	// Creates pointers to self's and the result's mpf_t structures
 	mpf_t *r = malloc(sizeof(*r));
@@ -878,7 +876,7 @@ f_truncate( VALUE self ) {
 // Sets the default floating point precision.
 // GMP uses at least this number of bits.
 // {Fixnum, Bignum} -> {NilClass}
-static VALUE
+VALUE
 f_set_def_prec( VALUE klass, VALUE precision ) {
 	// Loads the number of bits into an unsigned long
 	unsigned long longPrecision = NUM2LONG(precision);
@@ -898,7 +896,7 @@ f_set_def_prec( VALUE klass, VALUE precision ) {
 // If you need frequent access to this value, consider using the
 // class variable defined above.
 // {} -> {Fixnum}
-static VALUE
+VALUE
 f_get_def_prec( VALUE klass ) {
 	// Gets the precision from GMP
 	unsigned long result = mpf_get_default_prec();
@@ -908,7 +906,7 @@ f_get_def_prec( VALUE klass ) {
 
 // Square root
 // {GMP::Float, Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 	// Creates pointer to the result's mpf_t structure
 	mpf_t *r = malloc(sizeof(*r));
@@ -954,7 +952,7 @@ f_sqrt_singleton( VALUE klass, VALUE radicand ) {
 //// Question-like methods
 // Is it Not a Number?
 // {} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_nan( VALUE self ) {
 	// Loads self into a mpfr_t structure
 	mpfr_t *s;
@@ -968,7 +966,7 @@ f_nan( VALUE self ) {
 
 // Is it infinity (well, not quite, but anyhow...)?
 // {} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_inf( VALUE self ) {
 	// Loads self into a mpfr_t structure
 	mpfr_t *s;
@@ -982,7 +980,7 @@ f_inf( VALUE self ) {
 
 // Is it a number (i.e. neither NaN or infinity)
 // {} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_number( VALUE self ) {
 	// Loads self into a mpfr_t structure
 	mpfr_t *s;
@@ -996,7 +994,7 @@ f_number( VALUE self ) {
 
 // Is it zero?
 // {} -> {TrueClass, FalseClass}
-static VALUE
+VALUE
 f_zero( VALUE self ) {
 	// Loads self into a mpfr_t structure
 	mpfr_t *s;
@@ -1014,7 +1012,7 @@ f_zero( VALUE self ) {
 //// Trigonometric functions
 // Sine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_sine( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1034,7 +1032,7 @@ f_sine( VALUE klass, VALUE angle ) {
 
 // Cossine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_cossine( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1054,7 +1052,7 @@ f_cossine( VALUE klass, VALUE angle ) {
 
 // Tangent
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_tangent( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1074,7 +1072,7 @@ f_tangent( VALUE klass, VALUE angle ) {
 
 // Cotangent
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_cotangent( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1094,7 +1092,7 @@ f_cotangent( VALUE klass, VALUE angle ) {
 
 // Secant
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_secant( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1114,7 +1112,7 @@ f_secant( VALUE klass, VALUE angle ) {
 
 // Cosecant
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_cosecant( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1134,7 +1132,7 @@ f_cosecant( VALUE klass, VALUE angle ) {
 
 // Array with sine and cossine
 // {GMP::Float} -> {Array <<GMP::Float>> (2)
-static VALUE
+VALUE
 f_sine_and_cossine( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *s = malloc(sizeof(*s));
@@ -1166,7 +1164,7 @@ f_sine_and_cossine( VALUE klass, VALUE angle ) {
 //// Inverse trigonometric functions
 // Inverse sine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_asine( VALUE klass, VALUE trig_value ) {
 	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1186,7 +1184,7 @@ f_asine( VALUE klass, VALUE trig_value ) {
 
 // Inverse cossine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_acossine( VALUE klass, VALUE trig_value ) {
 	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1206,7 +1204,7 @@ f_acossine( VALUE klass, VALUE trig_value ) {
 
 // Inverse tangent
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_atangent( VALUE klass, VALUE trig_value ) {
 	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1226,7 +1224,7 @@ f_atangent( VALUE klass, VALUE trig_value ) {
 
 // Array with hyperbolic sine and cossine
 // {GMP::Float} -> {Array <<GMP::Float>> (2)
-static VALUE
+VALUE
 f_hsine_and_hcossine( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *s = malloc(sizeof(*s));
@@ -1258,7 +1256,7 @@ f_hsine_and_hcossine( VALUE klass, VALUE angle ) {
 //// Inverse hyperbolic trigonometry functions
 // Inverse hyperbolic sine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_ahsine( VALUE klass, VALUE trig_value ) {
 	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1278,7 +1276,7 @@ f_ahsine( VALUE klass, VALUE trig_value ) {
 
 // Inverse hyperbolic cossine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_ahcossine( VALUE klass, VALUE trig_value ) {
 	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1298,7 +1296,7 @@ f_ahcossine( VALUE klass, VALUE trig_value ) {
 
 // Inverse hyperbolic tangent
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_ahtangent( VALUE klass, VALUE trig_value ) {
 	// Creates pointers to the result's and trig_value's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1322,7 +1320,7 @@ f_ahtangent( VALUE klass, VALUE trig_value ) {
 //// Hyperbolic trigonometry functions
 // Hyperbolic sine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_hsine( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1342,7 +1340,7 @@ f_hsine( VALUE klass, VALUE angle ) {
 
 // Hyperbolic cossine
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_hcossine( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1362,7 +1360,7 @@ f_hcossine( VALUE klass, VALUE angle ) {
 
 // Hyperbolic tangent
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_htangent( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1382,7 +1380,7 @@ f_htangent( VALUE klass, VALUE angle ) {
 
 // Hyperbolic cotangent
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_hcotangent( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1402,7 +1400,7 @@ f_hcotangent( VALUE klass, VALUE angle ) {
 
 // Hyperbolic secant
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_hsecant( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1422,7 +1420,7 @@ f_hsecant( VALUE klass, VALUE angle ) {
 
 // Hyperbolic cosecant
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_hcosecant( VALUE klass, VALUE angle ) {
 	// Creates pointers to the result's and angle's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1447,7 +1445,7 @@ f_hcosecant( VALUE klass, VALUE angle ) {
 // Natural logarithm
 // {GMP::Float} -> {GMP::Float}
 // TODO: check the variable naming
-static VALUE
+VALUE
 f_logn( VALUE klass, VALUE logarithmand ) {
 	// Creates pointers to the result's and logarithmand's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1468,7 +1466,7 @@ f_logn( VALUE klass, VALUE logarithmand ) {
 // Base 2 logarithm
 // {GMP::Float} -> {GMP::Float}
 // TODO: check the variable naming
-static VALUE
+VALUE
 f_log2( VALUE klass, VALUE logarithmand ) {
 	// Creates pointers to the result's and logarithmand's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1489,7 +1487,7 @@ f_log2( VALUE klass, VALUE logarithmand ) {
 // Base 10 logarithm
 // {GMP::Float} -> {GMP::Float}
 // TODO: check the variable naming
-static VALUE
+VALUE
 f_log10( VALUE klass, VALUE logarithmand ) {
 	// Creates pointers to the result's and logarithmand's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1513,7 +1511,7 @@ f_log10( VALUE klass, VALUE logarithmand ) {
 //// Exponentiation methods
 // Base E exponentiation
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_exp( VALUE klass, VALUE exponent ) {
 	// Creates pointers to the result's and exponent's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1533,7 +1531,7 @@ f_exp( VALUE klass, VALUE exponent ) {
 
 // Base 2 exponentiation
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_exp2( VALUE klass, VALUE exponent ) {
 	// Creates pointers to the result's and exponent's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1553,7 +1551,7 @@ f_exp2( VALUE klass, VALUE exponent ) {
 
 // Base 10 exponentiation
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_exp10( VALUE klass, VALUE exponent ) {
 	// Creates pointers to the result's and exponent's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1577,7 +1575,7 @@ f_exp10( VALUE klass, VALUE exponent ) {
 //// Bessel functions
 // Of the first kind and order 0
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_bessel_first_0( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1597,7 +1595,7 @@ f_bessel_first_0( VALUE klass, VALUE number ) {
 
 // Of the first kind and order 1
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_bessel_first_1( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1617,7 +1615,7 @@ f_bessel_first_1( VALUE klass, VALUE number ) {
 
 // Of the first kind and order n
 // {GMP::Float}, {Fixnum} -> {GMP::Float}
-static VALUE
+VALUE
 f_bessel_first_n( VALUE klass, VALUE number, VALUE order ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1639,7 +1637,7 @@ f_bessel_first_n( VALUE klass, VALUE number, VALUE order ) {
 
 // Of the second kind and order 0
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_bessel_second_0( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1659,7 +1657,7 @@ f_bessel_second_0( VALUE klass, VALUE number ) {
 
 // Of the second kind and order 1
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_bessel_second_1( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1679,7 +1677,7 @@ f_bessel_second_1( VALUE klass, VALUE number ) {
 
 // Of the second kind and order n
 // {GMP::Float}, {Fixnum} -> {GMP::Float}
-static VALUE
+VALUE
 f_bessel_second_n( VALUE klass, VALUE number, VALUE order ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1705,7 +1703,7 @@ f_bessel_second_n( VALUE klass, VALUE number, VALUE order ) {
 //// Other methods
 // Factorial
 // {Fixnum} -> {GMP::Float}
-static VALUE
+VALUE
 f_factorial( VALUE klass, VALUE base ) {
 	// Creates pointer to the result's mpfr_t structure
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1722,7 +1720,7 @@ f_factorial( VALUE klass, VALUE base ) {
 
 // Exponential integral of the input
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_exp_integral( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1742,7 +1740,7 @@ f_exp_integral( VALUE klass, VALUE number ) {
 
 // Dilogarithm
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_dilogarithm( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1762,7 +1760,7 @@ f_dilogarithm( VALUE klass, VALUE number ) {
 
 // Euler gamma function
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_gamma( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1782,7 +1780,7 @@ f_gamma( VALUE klass, VALUE number ) {
 
 // Riemann zeta function
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_zeta( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1802,7 +1800,7 @@ f_zeta( VALUE klass, VALUE number ) {
 
 // Error function
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_error_function( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1821,7 +1819,7 @@ f_error_function( VALUE klass, VALUE number ) {
 }
 // Complimentary error function
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_error_function_comp( VALUE klass, VALUE number ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1841,7 +1839,7 @@ f_error_function_comp( VALUE klass, VALUE number ) {
 
 // Inverse square root (1/sqrt(x))
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_rec_sqrt( VALUE klass, VALUE radicand ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1865,7 +1863,7 @@ f_rec_sqrt( VALUE klass, VALUE radicand ) {
 
 // Cube root
 // {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_cube_root( VALUE klass, VALUE radicand ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1885,7 +1883,7 @@ f_cube_root( VALUE klass, VALUE radicand ) {
 
 // Nth root
 // {GMP::Float}, {Fixnum} -> {GMP::Float}
-static VALUE
+VALUE
 f_nth_root( VALUE klass, VALUE radicand, VALUE degree ) {
 	// Creates pointer to the result's and number's mpfr_t structures
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1912,7 +1910,7 @@ f_nth_root( VALUE klass, VALUE radicand, VALUE degree ) {
 
 // Arithmetic-geometric mean
 // {GMP::Float}, {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_ag_mean( VALUE klass, VALUE a, VALUE b ) {
 	// Creates a pointer to the result
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1933,7 +1931,7 @@ f_ag_mean( VALUE klass, VALUE a, VALUE b ) {
 
 // Euclidean norm (also the hypotenuse of the corresponding right triangle)
 // {GMP::Float}, {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_euclidean_norm( VALUE klass, VALUE a, VALUE b ) {
 	// Creates a pointer to the result
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1954,7 +1952,7 @@ f_euclidean_norm( VALUE klass, VALUE a, VALUE b ) {
 
 // fma: (a * b) + c
 // {GMP::Float}, {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_fma( VALUE klass, VALUE a, VALUE b, VALUE c ) {
 	// Creates a pointer to the result
 	mpfr_t *r = malloc(sizeof(*r));
@@ -1976,7 +1974,7 @@ f_fma( VALUE klass, VALUE a, VALUE b, VALUE c ) {
 
 // fms: (a * b) - c
 // {GMP::Float}, {GMP::Float} -> {GMP::Float}
-static VALUE
+VALUE
 f_fms( VALUE klass, VALUE a, VALUE b, VALUE c ) {
 	// Creates a pointer to the result
 	mpfr_t *r = malloc(sizeof(*r));
