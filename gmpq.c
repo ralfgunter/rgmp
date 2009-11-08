@@ -152,6 +152,32 @@ q_to_float( VALUE self ) {
 	return rb_float_new(mpq_get_d(*s));
 }
 
+// To GMP::Integer
+// {} -> {GMP::Integer}
+VALUE
+q_to_gmpz( VALUE self ) {
+	// Loads self into a mpq_t
+	mpq_t *s;
+	Data_Get_Struct(self, mpq_t, s);
+	
+	mpz_t *i = malloc(sizeof(*i));
+	mpz_init(*i);
+	mpz_set_q(*i, *s);
+	
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, i);
+}
+
+// To GMP::Rational
+// {} -> {GMP::Rational}
+VALUE
+q_to_gmpq( VALUE self ) {
+	// Ruby's integers are passed by value, so here we return a copy of self.
+	// This may change in the future, though.
+	VALUE copy = self;
+	
+	return copy;
+}
+
 // To GMP::Float
 // {} -> {GMP::Float}
 VALUE
@@ -660,6 +686,8 @@ Init_gmpq() {
 	// Conversion methods
 	rb_define_method(cGMPRational, "to_s", q_to_string, -1);
 	rb_define_method(cGMPRational, "to_f", q_to_float, 0);
+	rb_define_method(cGMPRational, "to_gmpz", q_to_gmpz, 0);
+	rb_define_method(cGMPRational, "to_gmpq", q_to_gmpq, 0);
 	rb_define_method(cGMPRational, "to_gmpf", q_to_gmpf, 0);
 	
 	// Binary arithmetical operators
