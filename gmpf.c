@@ -913,6 +913,12 @@ f_relative_difference( VALUE self, VALUE other ) {
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
 }
+
+// Coercion (makes operations commutative)
+VALUE
+f_coerce( VALUE self, VALUE other ) {
+	return rb_assoc_new(self, other);
+}
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
 
@@ -2256,6 +2262,7 @@ Init_gmpf() {
 	rb_define_method(cGMPFloat, "swap", f_swap, 1);
 	rb_define_method(cGMPFloat, "abs", f_absolute, 0);
 	rb_define_method(cGMPFloat, "relative_diff", f_relative_difference, 1);
+	rb_define_method(cGMPFloat, "coerce", f_coerce, 1);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPFloat, "def_precision=", f_set_def_prec, 1);

@@ -184,15 +184,18 @@ extern VALUE f_generic_comparison(VALUE, VALUE);
 // Question-like methods
 extern VALUE f_integer(VALUE);
 
+// Rounding
+extern VALUE f_ceil(VALUE);
+extern VALUE f_floor(VALUE);
+extern VALUE f_truncate(VALUE);
+
 // Other methods
 extern VALUE f_set_precision(VALUE, VALUE);
 extern VALUE f_get_precision(VALUE);
 extern VALUE f_swap(VALUE, VALUE);
 extern VALUE f_absolute(VALUE);
 extern VALUE f_relative_difference(VALUE, VALUE);
-extern VALUE f_ceil(VALUE);
-extern VALUE f_floor(VALUE);
-extern VALUE f_truncate(VALUE);
+extern VALUE f_coerce(VALUE, VALUE);
 
 // Singletons/Class methods
 extern VALUE f_set_def_prec(VALUE, VALUE);
