@@ -106,6 +106,7 @@ extern VALUE z_size_in_base(VALUE, VALUE);
 extern VALUE z_swap(VALUE, VALUE);
 extern VALUE z_next(VALUE);
 extern VALUE z_get_bit(VALUE, VALUE);
+extern VALUE z_coerce(VALUE, VALUE);
 
 // Singletons/Class methods
 extern VALUE z_powermod(VALUE, VALUE, VALUE, VALUE);

@@ -1523,6 +1523,12 @@ z_get_bit( VALUE self, VALUE index ) {
 	
 	return INT2FIX(mpz_tstbit(*i, longIndex));
 }
+
+// Coercion (makes operations commutative)
+VALUE
+z_coerce( VALUE self, VALUE other ) {
+	return rb_assoc_new(self, other);
+}
 //// end of other operations
 ////////////////////////////////////////////////////////////////////
 
@@ -2137,6 +2143,7 @@ Init_gmpz() {
 	rb_define_method(cGMPInteger, "swap", z_swap, 1);
 	rb_define_method(cGMPInteger, "next", z_next, 0);
 	rb_define_method(cGMPInteger, "[]", z_get_bit, 1);
+	rb_define_method(cGMPInteger, "coerce", z_coerce, 1);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPInteger, "powermod", z_powermod, 3);
@@ -2156,7 +2163,7 @@ Init_gmpz() {
 	rb_define_singleton_method(cGMPInteger, "jacobi", z_jacobi_singleton, 2);
 	rb_define_singleton_method(cGMPInteger, "kronecker", z_kronecker, 2);
 	rb_define_singleton_method(cGMPInteger, "xgcd", z_extended_gcd, 2);
-
+	
 	// Aliases
 	rb_define_alias(cGMPInteger, "modulo", "%");
 	rb_define_alias(cGMPInteger, "magnitude", "abs");
