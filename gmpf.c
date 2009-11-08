@@ -77,8 +77,11 @@ f_init( VALUE argc, VALUE *argv, VALUE self ) {
 			break;
 		}
 		case T_FLOAT: {
-			double nf = RFLOAT_VALUE(number);
-			mpf_set_d(*s, nf);
+			mpf_set_d(*s, RFLOAT_VALUE(number));
+			break;
+		}
+		case T_FIXNUM: {
+			mpf_set_si(*s, FIX2LONG(number));
 			break;
 		}
 		default: {
@@ -917,7 +920,9 @@ f_relative_difference( VALUE self, VALUE other ) {
 // Coercion (makes operations commutative)
 VALUE
 f_coerce( VALUE self, VALUE other ) {
-	return rb_assoc_new(self, other);
+    return rb_assoc_new(
+            rb_class_new_instance(1, &other, cGMPFloat),
+            self);
 }
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
