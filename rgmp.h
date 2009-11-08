@@ -146,6 +146,9 @@ extern VALUE q_init(VALUE, VALUE);
 // Conversion methods
 extern VALUE q_to_string(VALUE, VALUE*, VALUE);
 extern VALUE q_to_float(VALUE);
+extern VALUE q_to_gmpz(VALUE);
+extern VALUE q_to_gmpq(VALUE);
+extern VALUE q_to_gmpf(VALUE);
 
 // Binary arithmetical
 extern VALUE q_addition(VALUE, VALUE);

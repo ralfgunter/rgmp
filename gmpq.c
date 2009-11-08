@@ -47,6 +47,43 @@ q_init( VALUE self, VALUE ratData ) {
 	Data_Get_Struct(self, mpq_t, q);
 	
 	switch (TYPE(ratData)) {
+		case T_DATA: {
+			VALUE class = rb_obj_class(ratData);
+			if (class == cGMPRational) {
+				mpq_t *dr;
+				Data_Get_Struct(ratData, mpq_t, dr);
+				mpq_set(*q, *dr);
+			} else if (class == cGMPInteger) {
+				mpz_t *dz;
+				Data_Get_Struct(ratData, mpz_t, dz);
+				mpq_set_z(*q, *dz);
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+
+// Horrible hack, but apparently necessary nonetheless
+#undef mpf_t
+typedef __mpf_struct mpf_t[1];
+
+				mpfr_t *dfr;
+				Data_Get_Struct(ratData, mpfr_t, dfr);
+				mpf_t df;
+				__gmpf_init(df);
+				mpfr_get_f(df, *dfr, GMP_RNDN);
+				mpq_set_f(*q, df);
+				__gmpf_clear(df);
+
+#define mpf_t mpfr_t
+
+#else
+				mpf_t *df;
+				Data_Get_Struct(ratData, mpf_t, df);
+				mpq_set_f(*q, *df);
+#endif
+			} else {
+				rb_raise(rb_eTypeError, "input data type not supported");
+			}
+			break;
+		}
 		case T_STRING: {
 			mpq_set_str(*q, StringValuePtr(ratData), 10);
 			
@@ -68,7 +105,7 @@ q_init( VALUE self, VALUE ratData ) {
 
 ////////////////////////////////////////////////////////////////////
 //// Conversion methods
-// To string
+// To String
 // {} -> {String}
 VALUE
 q_to_string( VALUE argc, VALUE *argv, VALUE self ) {
@@ -113,6 +150,47 @@ q_to_float( VALUE self ) {
 	Data_Get_Struct(self, mpq_t, s);
 	
 	return rb_float_new(mpq_get_d(*s));
+}
+
+// To GMP::Integer
+// {} -> {GMP::Integer}
+VALUE
+q_to_gmpz( VALUE self ) {
+	// Loads self into a mpq_t
+	mpq_t *s;
+	Data_Get_Struct(self, mpq_t, s);
+	
+	mpz_t *i = malloc(sizeof(*i));
+	mpz_init(*i);
+	mpz_set_q(*i, *s);
+	
+	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, i);
+}
+
+// To GMP::Rational
+// {} -> {GMP::Rational}
+VALUE
+q_to_gmpq( VALUE self ) {
+	// Ruby's integers are passed by value, so here we return a copy of self.
+	// This may change in the future, though.
+	VALUE copy = self;
+	
+	return copy;
+}
+
+// To GMP::Float
+// {} -> {GMP::Float}
+VALUE
+q_to_gmpf( VALUE self ) {
+	// Loads self into a mpq_t
+	mpq_t *s;
+	Data_Get_Struct(self, mpq_t, s);
+	
+	mpf_t *f = malloc(sizeof(*f));
+	mpf_init(*f);
+	mpf_set_q(*f, *s);
+	
+	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, f);
 }
 //// end of conversion methods
 ////////////////////////////////////////////////////////////////////
@@ -599,6 +677,7 @@ Init_gmpq() {
 	mGMP = rb_define_module("GMP");
 	cGMPInteger = rb_define_class_under(mGMP, "Integer", rb_cObject);
 	cGMPRational = rb_define_class_under(mGMP, "Rational", rb_cObject);
+	cGMPFloat = rb_define_class_under(mGMP, "Float", rb_cObject);
 	
 	// Book keeping and the constructor method
 	rb_define_alloc_func(cGMPRational, rational_allocate);
@@ -607,6 +686,9 @@ Init_gmpq() {
 	// Conversion methods
 	rb_define_method(cGMPRational, "to_s", q_to_string, -1);
 	rb_define_method(cGMPRational, "to_f", q_to_float, 0);
+	rb_define_method(cGMPRational, "to_gmpz", q_to_gmpz, 0);
+	rb_define_method(cGMPRational, "to_gmpq", q_to_gmpq, 0);
+	rb_define_method(cGMPRational, "to_gmpf", q_to_gmpf, 0);
 	
 	// Binary arithmetical operators
 	rb_define_method(cGMPRational, "+", q_addition, 1);
