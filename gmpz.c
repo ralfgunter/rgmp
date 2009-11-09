@@ -1256,6 +1256,42 @@ z_multiplication_inplace( VALUE self, VALUE multiplicand ) {
 	
 	return Qnil;
 }
+
+// Multiply two values and then add to self
+// {GMP::Integer}, {GMP::Integer}
+VALUE
+z_addmul_inplace( VALUE self, VALUE first, VALUE second ) {
+	// Create pointers to self, first and second
+	mpz_t *i, *f, *s;
+	
+	// Loads all three from Ruby
+	Data_Get_Struct(second, mpz_t, s);
+	Data_Get_Struct(first, mpz_t, f);
+	Data_Get_Struct(self, mpz_t, i);
+	
+	// Does the calculation
+	mpz_addmul(*i, *f, *s);
+	
+	return Qnil;
+}
+
+// Multiply two values and then subtract from self
+// {GMP::Integer}, {GMP::Integer}
+VALUE
+z_submul_inplace( VALUE self, VALUE first, VALUE second ) {
+	// Create pointers to self, first and second
+	mpz_t *i, *f, *s;
+	
+	// Loads all three from Ruby
+	Data_Get_Struct(second, mpz_t, s);
+	Data_Get_Struct(first, mpz_t, f);
+	Data_Get_Struct(self, mpz_t, i);
+	
+	// Does the calculation
+	mpz_submul(*i, *f, *s);
+	
+	return Qnil;
+}
 //// end of inplace methods
 ////////////////////////////////////////////////////////////////////
 
@@ -2156,6 +2192,8 @@ Init_gmpz() {
 	rb_define_method(cGMPInteger, "add!", z_addition_inplace, 1);
 	rb_define_method(cGMPInteger, "sub!", z_subtraction_inplace, 1);
 	rb_define_method(cGMPInteger, "mul!", z_multiplication_inplace, 1);
+	rb_define_method(cGMPInteger, "addmul", z_addmul_inplace, 2);
+	rb_define_method(cGMPInteger, "submul", z_submul_inplace, 2);
 	
 	// Question-like methods
 	rb_define_method(cGMPInteger, "divisible_by?", z_divisible, 1);

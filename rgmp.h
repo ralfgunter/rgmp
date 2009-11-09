@@ -87,6 +87,8 @@ extern VALUE z_set_bit_inplace(VALUE, VALUE, VALUE);
 extern VALUE z_addition_inplace(VALUE, VALUE);
 extern VALUE z_subtraction_inplace(VALUE, VALUE);
 extern VALUE z_multiplication_inplace(VALUE, VALUE);
+extern VALUE z_addmul_inplace(VALUE, VALUE, VALUE);
+extern VALUE z_submul_inplace(VALUE, VALUE, VALUE);
 
 // Question-like methods
 extern VALUE z_divisible(VALUE, VALUE);
