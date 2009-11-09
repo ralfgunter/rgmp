@@ -547,64 +547,103 @@ z_negation( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 //// Logic operators
 // Logic AND (&)
-// {GMP::Integer} -> {GMP::Integer}
+// {GMP::Integer, Fixnum} -> {GMP::Integer}
 VALUE
 z_logic_and( VALUE self, VALUE other ) {
-	// Creates pointers to self's, other's and result's mpz_t structures
+	// Creates pointers to self's and result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i, *o;
+	mpz_t *i;
 	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Loads self from Ruby
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	// Inits the result
-	mpz_init(*r);
-	
-	// Sets result as self bitwise-and other
-	mpz_and(*r, *i, *o);
+	// This might be a little faster than the previous method, since only
+	// two classes are present.
+	if (rb_obj_class(other) == cGMPInteger) {
+		mpz_t *oz;
+		Data_Get_Struct(other, mpz_t, oz);
+		
+		mpz_init(*r);
+		mpz_and(*r, *i, *oz);
+	} else if (FIXNUM_P(other)) {
+		// GMP's logic operators only accept mpz_t as arguments, therefore
+		// we have to create a temporary mpz_t to hold 'other'.
+		signed long ol = FIX2LONG(other);
+		mpz_t olz;
+		mpz_init_set_si(olz, ol);
+		
+		mpz_init(*r);
+		mpz_and(*r, *i, olz);
+		mpz_clear(olz);
+	}
 	
 	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Logic OR (inclusive OR) (|)
-// {GMP::Integer} -> {GMP::Integer}
+// {GMP::Integer, Fixnum} -> {GMP::Integer}
 VALUE
 z_logic_ior( VALUE self, VALUE other ) {
-	// Creates pointers to self's, other's and result's mpz_t structures
+	// Creates pointers to self's and result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i, *o;
+	mpz_t *i;
 	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Loads self from Ruby
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	// Inits the result
-	mpz_init(*r);
-	
-	// Sets result as self bitwise inclusive-or other
-	mpz_ior(*r, *i, *o);
+	// This might be a little faster than the previous method, since only
+	// two classes are present.
+	if (rb_obj_class(other) == cGMPInteger) {
+		mpz_t *oz;
+		Data_Get_Struct(other, mpz_t, oz);
+		
+		mpz_init(*r);
+		mpz_ior(*r, *i, *oz);
+	} else if (FIXNUM_P(other)) {
+		// GMP's logic operators only accept mpz_t as arguments, therefore
+		// we have to create a temporary mpz_t to hold 'other'.
+		signed long ol = FIX2LONG(other);
+		mpz_t olz;
+		mpz_init_set_si(olz, ol);
+		
+		mpz_init(*r);
+		mpz_ior(*r, *i, olz);
+		mpz_clear(olz);
+	}
 	
 	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
 
 // Logic XOR (exclusive OR) (^)
-// {GMP::Integer} -> {GMP::Integer}
+// {GMP::Integer, Fixnum} -> {GMP::Integer}
 VALUE 
 z_logic_xor( VALUE self, VALUE other ) {
-	// Creates pointers to self's, other's and result's mpz_t structures
+	// Creates pointers to self's and result's mpz_t structures
 	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i, *o;
+	mpz_t *i;
 	
-	// Copies back the mpz_t pointers wrapped in ruby data objects
+	// Loads self from Ruby
 	Data_Get_Struct(self, mpz_t, i);
-	Data_Get_Struct(other, mpz_t, o);
 	
-	// Inits the result
-	mpz_init(*r);
-	
-	// Sets result as self bitwise exclusive-or other
-	mpz_xor(*r, *i, *o);
+	// This might be a little faster than the previous method, since only
+	// two classes are present.
+	if (rb_obj_class(other) == cGMPInteger) {
+		mpz_t *oz;
+		Data_Get_Struct(other, mpz_t, oz);
+		
+		mpz_init(*r);
+		mpz_xor(*r, *i, *oz);
+	} else if (FIXNUM_P(other)) {
+		// GMP's logic operators only accept mpz_t as arguments, therefore
+		// we have to create a temporary mpz_t to hold 'other'.
+		signed long ol = FIX2LONG(other);
+		mpz_t olz;
+		mpz_init_set_si(olz, ol);
+		
+		mpz_init(*r);
+		mpz_xor(*r, *i, olz);
+		mpz_clear(olz);
+	}
 	
 	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
 }
@@ -1053,7 +1092,7 @@ z_invert_inplace( VALUE self, VALUE base ) {
 }
 
 // Setting a specific bit
-// {Fixnum, Bignum}, {Fixnum} -> {NilClass}
+// {Fixnum}, {Fixnum} -> {NilClass}
 VALUE
 z_set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 	// Creates a pointer for self's mpz_t structure and two unsigned long
@@ -1063,7 +1102,7 @@ z_set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 	int intNewValue;
 	
 	// Checks if the arguments are of the correct type
-	if (!FIXNUM_P(newValue) || !(FIXNUM_P(index) || TYPE((index)) == T_BIGNUM))
+	if (!FIXNUM_P(newValue) || !(FIXNUM_P(index)))
 		rb_raise(rb_eTypeError, "inputs are of the wrong type");
 	
 	// Loads and checks if the bit is in fact a bit
@@ -1074,8 +1113,8 @@ z_set_bit_inplace( VALUE self, VALUE index, VALUE newValue ) {
 	// Loads and checks if the index is within range.
 	// Horrible hack: the first NUM2LONG messes up negative indexes
 	// while the second one does consider them.
-	longIndex = NUM2LONG(index);
-	if (NUM2LONG(index) < 0)
+	longIndex = FIX2LONG(index);
+	if (longIndex < 0)
 		rb_raise(rb_eRangeError, "bit position out of range");
 	
 	// Copies back the mpz_t pointer wrapped in a ruby data object
@@ -2096,7 +2135,7 @@ Init_gmpz() {
 	rb_define_method(cGMPInteger, "&", z_logic_and, 1);
 	rb_define_method(cGMPInteger, "|", z_logic_ior, 1);
 	rb_define_method(cGMPInteger, "^", z_logic_xor, 1);
-	rb_define_method(cGMPInteger, "~", z_logic_not, 0);
+	rb_define_method(cGMPInteger, "com", z_logic_not, 0);
 	
 	// Comparisons
 	rb_define_method(cGMPInteger, "==", z_equality_test, 1);
@@ -2161,6 +2200,8 @@ Init_gmpz() {
 	rb_define_alias(cGMPInteger, "modulo", "%");
 	rb_define_alias(cGMPInteger, "magnitude", "abs");
 	rb_define_alias(cGMPInteger, "to_int", "to_i");
+	rb_define_alias(cGMPInteger, "to_d", "to_f");
+	rb_define_alias(cGMPInteger, "not", "com");
 	// Whether or not this is a good idea is debatable, but for now...
 	rb_define_singleton_method(cGMPInteger, "legendre", z_jacobi_singleton, 2);
 }
