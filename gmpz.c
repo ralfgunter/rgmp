@@ -404,7 +404,7 @@ z_modulo( VALUE self, VALUE base ) {
 }
 
 // Exponetiation (**)
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, Fixnum} -> {GMP::Integer}
 VALUE
 z_power( VALUE self, VALUE exp ) {
 	// Creates pointers to self's and the result's mpz_t structures
@@ -421,17 +421,20 @@ z_power( VALUE self, VALUE exp ) {
 	switch (TYPE(exp)) {
 		case T_DATA: {
 			if (rb_obj_class(exp) == cGMPInteger) {
-				// Sorry, but this'll take a while to test for accuracy...
-				
-				// Unfortunately GMP does not provide an exponetiation method
-				// that takes mpz_t exponents, so once more we have to fallback
-				// to a hackish workaround
-				mpz_t *sd, tempExp;
+				// Unfortunately GMP does not provide a pure exponetiation
+				// method that takes mpz_t exponents, so we have to convert it
+				// to an unsigned long first, and then use call mpz_pow_ui to
+				// get the result.
+				mpz_t *sd;
 				Data_Get_Struct(exp, mpz_t, sd);
-				mpz_init_set(tempExp, *sd);
-				mpz_add_ui(tempExp, tempExp, 1);
-				mpz_powm(*r, *i, *sd, tempExp);
-				mpz_clear(tempExp);
+				
+				if (mpz_cmp_ui(*sd, ULONG_MAX) > 0)
+					rb_raise(rb_eRangeError, "exponent must fit in a ulong");
+				
+				if (mpz_cmp_ui(*sd, 0) < 0)
+					rb_raise(rb_eRangeError, "exponent must be non-negative");
+				
+				mpz_pow_ui(*r, *i, mpz_get_ui(*sd));
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -442,18 +445,6 @@ z_power( VALUE self, VALUE exp ) {
 			if ((signed long) sl < 0)
 				rb_raise(rb_eRangeError, "exponent must be non-negative");
 			mpz_pow_ui(*r, *i, sl);
-			break;
-		}
-		case T_BIGNUM: {
-			// Sorry, but this'll take a while to test for accuracy...
-			mpz_t tempExb1, tempExb2;
-			VALUE str = rb_big2str(exp, 10);
-			mpz_init_set_str(tempExb1, StringValuePtr(str), 10);
-			mpz_init_set(tempExb2, tempExb1);
-			mpz_add_ui(tempExb2, tempExb2, 1);
-			mpz_powm(*r, *i, tempExb1, tempExb2);
-			mpz_clear(tempExb1);
-			mpz_clear(tempExb2);
 			break;
 		}
 		default: {
@@ -1527,7 +1518,9 @@ z_get_bit( VALUE self, VALUE index ) {
 // Coercion (makes operations commutative)
 VALUE
 z_coerce( VALUE self, VALUE other ) {
-	return rb_assoc_new(self, other);
+	return rb_assoc_new(
+			rb_class_new_instance(1, &other, cGMPInteger),
+			self);
 }
 //// end of other operations
 ////////////////////////////////////////////////////////////////////
