@@ -325,8 +325,8 @@ z_division( VALUE self, VALUE dividend ) {
 			if (rb_obj_class(dividend) == cGMPInteger) {
 				mpz_t *sd;
 				Data_Get_Struct(dividend, mpz_t, sd);
-				if (mpz_cmp_ui(*sd, (unsigned long) 0) == 0)
-					rb_raise(rb_eRuntimeError, "divided by 0");
+				if (mpz_cmp_ui(*sd, 0) == 0)
+					rb_raise(rb_eZeroDivError, "divided by 0");
 				mpz_fdiv_q(*r, *i, *sd);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
@@ -336,7 +336,7 @@ z_division( VALUE self, VALUE dividend ) {
 		case T_FIXNUM: {
 			signed long sl = FIX2LONG(dividend);
 			if (sl == 0)
-				rb_raise(rb_eRuntimeError, "divided by 0");
+				rb_raise(rb_eZeroDivError, "divided by 0");
 			mpz_fdiv_q_ui(*r, *i, ((sl > 0) ? sl : -sl));
 			if (sl < 0)
 				mpz_neg(*r, *r);
