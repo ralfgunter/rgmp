@@ -77,8 +77,11 @@ f_init( VALUE argc, VALUE *argv, VALUE self ) {
 			break;
 		}
 		case T_FLOAT: {
-			double nf = RFLOAT_VALUE(number);
-			mpf_set_d(*s, nf);
+			mpf_set_d(*s, RFLOAT_VALUE(number));
+			break;
+		}
+		case T_FIXNUM: {
+			mpf_set_si(*s, FIX2LONG(number));
 			break;
 		}
 		default: {
@@ -912,6 +915,14 @@ f_relative_difference( VALUE self, VALUE other ) {
 	mpf_reldiff(*r, *f, *o);
 	
 	return Data_Wrap_Struct(cGMPFloat, float_mark, float_free, r);
+}
+
+// Coercion (makes operations commutative)
+VALUE
+f_coerce( VALUE self, VALUE other ) {
+    return rb_assoc_new(
+            rb_class_new_instance(1, &other, cGMPFloat),
+            self);
 }
 //// end of other methods
 ////////////////////////////////////////////////////////////////////
@@ -2256,6 +2267,7 @@ Init_gmpf() {
 	rb_define_method(cGMPFloat, "swap", f_swap, 1);
 	rb_define_method(cGMPFloat, "abs", f_absolute, 0);
 	rb_define_method(cGMPFloat, "relative_diff", f_relative_difference, 1);
+	rb_define_method(cGMPFloat, "coerce", f_coerce, 1);
 	
 	// Singletons/Class methods
 	rb_define_singleton_method(cGMPFloat, "def_precision=", f_set_def_prec, 1);
