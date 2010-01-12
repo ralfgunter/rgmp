@@ -176,7 +176,7 @@ extern VALUE q_swap(VALUE, VALUE);
 extern VALUE q_sign(VALUE);
 extern VALUE q_absolute(VALUE);
 extern VALUE q_invert(VALUE);
-
+extern VALUE q_coerce(VALUE, VALUE);
 
 
 /* GMP::Float method prototyping */

@@ -666,6 +666,12 @@ q_invert( VALUE self ) {
 	
 	return Data_Wrap_Struct(cGMPRational, rational_mark, rational_free, r);
 }
+
+// Coercion (makes operations commutative)
+VALUE
+q_coerce( VALUE self, VALUE other ) {
+	return rb_assoc_new(self, other);
+}
 //// end of other operations
 ////////////////////////////////////////////////////////////////////
 
@@ -719,4 +725,5 @@ Init_gmpq() {
 	rb_define_method(cGMPRational, "sign", q_sign, 0);
 	rb_define_method(cGMPRational, "abs", q_absolute, 0);
 	rb_define_method(cGMPRational, "inv", q_invert, 0);
+	rb_define_method(cGMPRational, "coerce", q_coerce, 1);
 }
