@@ -34,11 +34,11 @@ extern VALUE cGMPInteger, cGMPRational, cGMPFloat;
 extern void Init_gmpz();
 
 // Garbage collection
-extern void integer_mark(mpz_t*);
-extern void integer_free(mpz_t*);
+extern void z_mark(mpz_t*);
+extern void z_free(mpz_t*);
 
 // Object allocation
-extern VALUE integer_allocate(VALUE);
+extern VALUE z_allocate(VALUE);
 
 // Class constructor
 extern VALUE z_init(VALUE, VALUE);

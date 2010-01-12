@@ -24,18 +24,18 @@
 //// Fundamental methods
 // Garbage collection
 void
-integer_mark( mpz_t *i ) {}
+z_mark( mpz_t *i ) {}
 
 void
-integer_free( mpz_t *i ) {
+z_free( mpz_t *i ) {
 	mpz_clear(*i);
 }
 
 // Object allocation
 VALUE
-integer_allocate( VALUE klass ) {
+z_allocate( VALUE klass ) {
 	mpz_t *i = malloc(sizeof(mpz_t));
-	return Data_Wrap_Struct(klass, integer_mark, integer_free, i);
+	return Data_Wrap_Struct(klass, z_mark, z_free, i);
 }
 
 // Class constructor
@@ -173,47 +173,63 @@ z_to_float( VALUE self ) {
 ////////////////////////////////////////////////////////////////////
 //// Binary arithmetical operators (operations taking two values)
 // Addition (+)
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, GMP::Float, GMP::Rational, Fixnum, Bignum} ->
+// {GMP::Integer, GMP::Float, GMP::Rational}
 VALUE
 z_addition( VALUE self, VALUE summand ) {
-	// Creates pointers to self's and the result's mpz_t structures
-	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i;
+	mpz_t *r, *i;
+	VALUE result;
 	
 	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
-	// Inits the result
-	mpz_init(*r);
-	
 	// Decides what to do based on the summand's type/class
 	switch (TYPE(summand)) {
 		case T_DATA: {
-			if (rb_obj_class(summand) == cGMPInteger) {
+			VALUE class = rb_obj_class(summand);
+			
+			if (class == cGMPInteger) {
+				r = (mpz_t *) malloc(sizeof(*r));
+				mpz_init(*r);
 				mpz_t *sd;
 				Data_Get_Struct(summand, mpz_t, sd);
 				mpz_add(*r, *i, *sd);
+				result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
+			} else if (class == cGMPFloat) {
+				VALUE f_self = rb_class_new_instance(1, &self, cGMPFloat);
+				result = f_addition(f_self, summand);
+			} else if (class == cGMPRational) {
+				VALUE q_self = rb_class_new_instance(1, &self, cGMPRational);
+				result = q_addition(q_self, summand);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
 			break;
 		}
 		case T_FIXNUM: {
-			// Yep, also smells like a bad hack
-			// Unfortunately, GMP does not have an addition function that deals
-			// with signed ints
-			mpz_t tempSuf;
-			mpz_init_set_si(tempSuf, FIX2LONG(summand));
-			mpz_add(*r, *i, tempSuf);
-			mpz_clear(tempSuf);
+			long tempSummand = FIX2LONG(summand);
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
+			
+			if (tempSummand > 0) {
+				mpz_add_ui(*r, *i, tempSummand);
+			} else {
+				mpz_sub_ui(*r, *i, -tempSummand);
+			}
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		case T_BIGNUM: {
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
 			mpz_t tempSub;
 			VALUE str = rb_big2str(summand, 10);
 			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
 			mpz_add(*r, *i, tempSub);
 			mpz_clear(tempSub);
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		default: {
@@ -221,50 +237,70 @@ z_addition( VALUE self, VALUE summand ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return result;
 }
 
 // Subtraction (-)
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, GMP::Float, GMP::Rational, Fixnum, Bignum} ->
+// {GMP::Integer, GMP::Float, GMP::Rational}
 VALUE
 z_subtraction( VALUE self, VALUE subtraend ) {
-	// Creates pointers to self's and the result's mpz_t structures
-	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i;
+	mpz_t *r, *i;
+	VALUE result;
 	
 	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
-	// Inits the result
-	mpz_init(*r);
-	
 	// Decides what to do based on the subtraend's type/class
 	switch (TYPE(subtraend)) {
 		case T_DATA: {
-			if (rb_obj_class(subtraend) == cGMPInteger) {
+			VALUE class = rb_obj_class(subtraend);
+			
+			if (class == cGMPInteger) {
+				r = (mpz_t *) malloc(sizeof(*r));
+				mpz_init(*r);
 				mpz_t *sd;
 				Data_Get_Struct(subtraend, mpz_t, sd);
 				mpz_sub(*r, *i, *sd);
+				
+				result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
+			} else if (class == cGMPFloat) {
+				VALUE f_self = rb_class_new_instance(1, &self, cGMPFloat);
+				
+				result = f_subtraction(f_self, subtraend);
+			} else if (class == cGMPRational) {
+				VALUE q_self = rb_class_new_instance(1, &self, cGMPRational);
+				
+				result = q_subtraction(q_self, subtraend);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
 			break;
 		}
 		case T_FIXNUM: {
-			// Yep, also smells like a bad hack
-			// Unfortunately, GMP does not have a subtraction function that
-			// deals with signed ints
-			mpz_t tempSuf;
-			mpz_init_set_si(tempSuf, FIX2LONG(subtraend));
-			mpz_sub(*r, *i, tempSuf);
+			long tempSubtraend = FIX2LONG(subtraend);
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
+			
+			if (tempSubtraend > 0) {
+				mpz_sub_ui(*r, *i, tempSubtraend);
+			} else {
+				mpz_add_ui(*r, *i, -tempSubtraend);
+			}
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		case T_BIGNUM: {
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
 			mpz_t tempSub;
 			VALUE str = rb_big2str(subtraend, 10);
 			mpz_init_set_str(tempSub, StringValuePtr(str), 10);
 			mpz_sub(*r, *i, tempSub);
 			mpz_clear(tempSub);
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		default: {
@@ -272,46 +308,66 @@ z_subtraction( VALUE self, VALUE subtraend ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return result;
 }
 
 // Multiplication (*)
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, GMP::Float, GMP::Rational, Fixnum, Bignum} ->
+// {GMP::Integer, GMP::Float, GMP::Rational}
 VALUE
 z_multiplication( VALUE self, VALUE multiplicand ) {
-	// Creates pointers to self's and the result's mpz_t structures
-	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i;
+	mpz_t *r, *i;
+	VALUE result;
 	
 	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
-	// Inits the result
-	mpz_init(*r);
-	
 	// Decides what to do based on the multiplicand's type/class
 	switch (TYPE(multiplicand)) {
 		case T_DATA: {
-			if (rb_obj_class(multiplicand) == cGMPInteger) {
+			VALUE class = rb_obj_class(multiplicand);
+			
+			if (class == cGMPInteger) {
+				r = (mpz_t *) malloc(sizeof(*r));
+				mpz_init(*r);
+				
 				mpz_t *sd;
 				Data_Get_Struct(multiplicand, mpz_t, sd);
 				mpz_mul(*r, *i, *sd);
+				
+				result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
+			} else if (class == cGMPFloat) {
+				VALUE f_self = rb_class_new_instance(1, &self, cGMPFloat);
+				
+				result = f_multiplication(f_self, multiplicand);
+			} else if (class == cGMPRational) {
+				VALUE q_self = rb_class_new_instance(1, &self, cGMPRational);
+				
+				result = q_multiplication(q_self, multiplicand);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
 			break;
 		}
 		case T_FIXNUM: {
-			signed long sl = FIX2LONG(multiplicand);
+			long sl = FIX2LONG(multiplicand);
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
 			mpz_mul_si(*r, *i, sl);
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		case T_BIGNUM: {
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
 			mpz_t tempMub;
 			VALUE str = rb_big2str(multiplicand, 10);
 			mpz_init_set_str(tempMub, StringValuePtr(str), 10);
 			mpz_mul(*r, *i, tempMub);
 			mpz_clear(tempMub);
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		default: {
@@ -319,52 +375,73 @@ z_multiplication( VALUE self, VALUE multiplicand ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return result;
 }
 
 // Division (/)
-// {GMP::Integer, Fixnum, Bignum} -> {GMP::Integer}
+// {GMP::Integer, GMP::Float, GMP::Rational, Fixnum, Bignum} ->
+// {GMP::Integer, GMP::Float, GMP::Rational}
 VALUE
 z_division( VALUE self, VALUE dividend ) {
-	// Creates pointers to self's and the result's mpz_t structures
-	mpz_t *r = malloc(sizeof(*r));
-	mpz_t *i;
+	mpz_t *r, *i;
+	VALUE result;
 	
 	// Loads self into *i
 	Data_Get_Struct(self, mpz_t, i);
 	
-	// Inits the result
-	mpz_init(*r);
-	
 	// Decides what to do based on the dividend's type/class
 	switch (TYPE(dividend)) {
 		case T_DATA: {
-			if (rb_obj_class(dividend) == cGMPInteger) {
+			VALUE class = rb_obj_class(dividend);
+			
+			if (class == cGMPInteger) {
+				r = (mpz_t *) malloc(sizeof(*r));
+				mpz_init(*r);
+				
 				mpz_t *sd;
 				Data_Get_Struct(dividend, mpz_t, sd);
 				if (mpz_sgn(*sd) == 0)
 					rb_raise(rb_eZeroDivError, "divided by 0");
 				mpz_fdiv_q(*r, *i, *sd);
+				
+				result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
+			} else if (class == cGMPFloat) {
+				VALUE f_self = rb_class_new_instance(1, &self, cGMPFloat);
+				
+				result = f_division(f_self, dividend);
+			} else if (class == cGMPRational) {
+				VALUE q_self = rb_class_new_instance(1, &self, cGMPRational);
+				
+				result = q_division(q_self, dividend);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
 			break;
 		}
 		case T_FIXNUM: {
-			signed long sl = FIX2LONG(dividend);
+			long sl = FIX2LONG(dividend);
 			if (sl == 0)
 				rb_raise(rb_eZeroDivError, "divided by 0");
+			
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
 			mpz_fdiv_q_ui(*r, *i, ((sl > 0) ? sl : -sl));
 			if (sl < 0)
 				mpz_neg(*r, *r);
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		case T_BIGNUM: {
+			r = (mpz_t *) malloc(sizeof(*r));
+			mpz_init(*r);
 			mpz_t tempDb;
 			VALUE str = rb_big2str(dividend, 10);
 			mpz_init_set_str(tempDb, StringValuePtr(str), 10);
 			mpz_fdiv_q(*r, *i, tempDb);
 			mpz_clear(tempDb);
+			
+			result = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 			break;
 		}
 		default: {
@@ -372,7 +449,7 @@ z_division( VALUE self, VALUE dividend ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return result;
 }
 
 // Modulo (from modular arithmetic) (%)
@@ -417,7 +494,7 @@ z_modulo( VALUE self, VALUE base ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Exponetiation (**)
@@ -469,7 +546,7 @@ z_power( VALUE self, VALUE exp ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Left shift (also multiplication by a power of 2)
@@ -497,7 +574,7 @@ z_left_shift( VALUE self, VALUE shift ) {
 	longShift = NUM2LONG(shift);
 	mpz_mul_2exp(*r, *i, longShift);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Right shift (also division by a power of 2)
@@ -525,7 +602,7 @@ z_right_shift( VALUE self, VALUE shift ) {
 	longShift = NUM2LONG(shift);
 	mpz_fdiv_q_2exp(*r, *i, longShift);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 //// end of binary operator methods
 ////////////////////////////////////////////////////////////////////
@@ -556,7 +633,7 @@ z_negation( VALUE self ) {
 	// Negates i, and copies the result to r
 	mpz_neg(*r, *i);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 //// end of unary operators methods
 ////////////////////////////////////////////////////////////////////
@@ -594,7 +671,7 @@ z_logic_and( VALUE self, VALUE other ) {
 		mpz_clear(olz);
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Logic OR (inclusive OR) (|)
@@ -628,7 +705,7 @@ z_logic_ior( VALUE self, VALUE other ) {
 		mpz_clear(olz);
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Logic XOR (exclusive OR) (^)
@@ -662,7 +739,7 @@ z_logic_xor( VALUE self, VALUE other ) {
 		mpz_clear(olz);
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Logic NOT (~)
@@ -682,7 +759,7 @@ z_logic_not( VALUE self ) {
 	// Sets result as the one's complement of self
 	mpz_com(*r, *i);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 //// end of logic manipulation methods
 ////////////////////////////////////////////////////////////////////
@@ -1505,7 +1582,7 @@ z_absolute( VALUE self ) {
 	// Sets the result as the absolute value of self
 	mpz_abs(*r, *i);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 VALUE
@@ -1523,7 +1600,7 @@ z_next_prime( VALUE self ) {
 	// (probably) Sets the result as the next prime greater than itself
 	mpz_nextprime(*r, *i);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Number of digits in a specific base
@@ -1582,7 +1659,7 @@ z_next( VALUE self ) {
 	// Sets the result as the next number from self
 	mpz_add_ui(*r, *i, (unsigned long) 1);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Gets the specific bit
@@ -1698,7 +1775,7 @@ z_powermod( VALUE klass, VALUE self, VALUE exp, VALUE base ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Square root
@@ -1722,7 +1799,7 @@ z_sqrt_singleton( VALUE klass, VALUE number ) {
 	// Takes the floor of the square root
 	mpz_sqrt(*r, *n);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Nth root
@@ -1755,7 +1832,7 @@ z_root_singleton( VALUE klass, VALUE number, VALUE degree ) {
 	
 	mpz_root(*r, *n, longDegree);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Fibonacci numbers generator
@@ -1775,7 +1852,7 @@ z_fibonacci_singleton( VALUE klass, VALUE index ) {
 	
 	mpz_fib_ui(*r, longIndex);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Fibonacci pairs generator
@@ -1797,8 +1874,8 @@ z_fibonacci2_singleton( VALUE klass, VALUE index ) {
 	mpz_fib2_ui(*x, *y, longIndex);
 	
 	// Converts the results into Ruby data objects
-	VALUE rx = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, x);
-	VALUE ry = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, y);
+	VALUE rx = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, x);
+	VALUE ry = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, y);
 	
 	return rb_ary_new3(2, ry, rx);
 }
@@ -1820,7 +1897,7 @@ z_lucas_singleton( VALUE klass, VALUE index ) {
 	
 	mpz_lucnum_ui(*r, longIndex);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Lucas pairs generator
@@ -1842,8 +1919,8 @@ z_lucas2_singleton( VALUE klass, VALUE index ) {
 	mpz_lucnum2_ui(*x, *y, longIndex);
 	
 	// Converts the results into Ruby data objects
-	VALUE rx = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, x);
-	VALUE ry = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, y);
+	VALUE rx = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, x);
+	VALUE ry = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, y);
 	
 	return rb_ary_new3(2, ry, rx);
 }
@@ -1865,7 +1942,7 @@ z_factorial_singleton( VALUE klass, VALUE number ) {
 	
 	mpz_fac_ui(*r, longNumber);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Binomial coefficient/Combination (combinatorics)
@@ -1906,7 +1983,7 @@ z_binomial_singleton( VALUE klass, VALUE n, VALUE k ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Factor removal (divides exhaustively by one factor until no longer possible)
@@ -1931,7 +2008,7 @@ z_remove_singleton( VALUE klass, VALUE number, VALUE factor ) {
 	
 	mpz_remove(*r, *n, *f);
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Comparison of absolutes
@@ -1998,7 +2075,7 @@ z_invert_singleton( VALUE klass, VALUE number, VALUE base ) {
 	if (check == 0)
 		rb_raise(rb_eRuntimeError, "input is not invertible on this base");
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Least common multiple
@@ -2037,7 +2114,7 @@ z_lcm_singleton( VALUE klass, VALUE number, VALUE other ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Greatest common divisor
@@ -2076,7 +2153,7 @@ z_gcd_singleton( VALUE klass, VALUE number, VALUE other ) {
 		}
 	}
 	
-	return Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, r);
+	return Data_Wrap_Struct(cGMPInteger, z_mark, z_free, r);
 }
 
 // Jacobi symbol
@@ -2144,9 +2221,9 @@ z_extended_gcd( VALUE klass, VALUE a, VALUE b ) {
 	mpz_gcdext(*g, *s, *t, *ma, *mb);
 	
 	// Wraps ther esults into Ruby objects
-	VALUE rt = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, t);
-	VALUE rs = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, s);
-	VALUE rg = Data_Wrap_Struct(cGMPInteger, integer_mark, integer_free, g);
+	VALUE rt = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, t);
+	VALUE rs = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, s);
+	VALUE rg = Data_Wrap_Struct(cGMPInteger, z_mark, z_free, g);
 	
 	return rb_ary_new3(3, rg, rs, rt);
 }
@@ -2162,7 +2239,7 @@ Init_gmpz() {
 	cGMPInteger = rb_define_class_under(mGMP, "Integer", rb_cObject);
 	
 	// Book keeping and the constructor method
-	rb_define_alloc_func(cGMPInteger, integer_allocate);
+	rb_define_alloc_func(cGMPInteger, z_allocate);
 	rb_define_method(cGMPInteger, "initialize", z_init, 1);
 	
 	// Converters
