@@ -40,7 +40,6 @@ float_free( mpf_t *f ) {
 VALUE
 float_allocate( VALUE klass ) {
 	mpf_t *f = malloc(sizeof(mpf_t));
-	mpf_init(*f);
 	return Data_Wrap_Struct(klass, float_mark, float_free, f);
 }
 
@@ -60,15 +59,26 @@ f_init( VALUE argc, VALUE *argv, VALUE self ) {
 	
 	// Loads the (blank) new object
 	Data_Get_Struct(self, mpf_t, s);
+	mpf_init(*s);
 	
 	switch (TYPE(number)) {
 		case T_DATA: {
-			if (rb_obj_class(number) == cGMPFloat) {
+			VALUE class = rb_obj_class(number);
+			
+			if (class == cGMPFloat) {
 				mpf_t *ngf;
 				Data_Get_Struct(number, mpf_t, ngf);
 				mpf_set(*s, *ngf);
+			} else if (class == cGMPInteger) {
+				mpz_t *nz;
+				Data_Get_Struct(number, mpz_t, nz);
+				mpf_set_z(*s, *nz);
+			} else if (class == cGMPRational) {
+				mpq_t *nq;
+				Data_Get_Struct(number, mpq_t, nq);
+				mpf_set_q(*s, *nq);
 			} else {
-				rb_raise(rb_eTypeError, "input data type not supported");
+				rb_raise(rb_eTypeError, "default value's class not supported");
 			}
 			break;
 		}
@@ -85,7 +95,7 @@ f_init( VALUE argc, VALUE *argv, VALUE self ) {
 			break;
 		}
 		default: {
-			rb_raise(rb_eTypeError, "input data type not supported");
+			rb_raise(rb_eTypeError, "default value's class not supported");
 		}
 	}
 	
