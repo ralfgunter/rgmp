@@ -56,12 +56,29 @@ z_init( VALUE self, VALUE intData ) {
 			break;
 		}
 		case T_DATA: {
-			if (rb_obj_class(intData) == cGMPInteger) {
+			VALUE class = rb_obj_class(intData);
+			
+			if (class == cGMPInteger) {
 				mpz_t *gi;
 				Data_Get_Struct(intData, mpz_t, gi);
 				mpz_set(*i, *gi);
+			} else if (class == cGMPFloat) {
+				mpf_t *nf;
+				Data_Get_Struct(intData, mpf_t, nf);
+#ifdef MPFR
+				// If compiling with MPFR support, GMP does not know how to
+				// convert intData to a mpz. Therefore, a MPFR function is used
+				// to do the job.
+				mpfr_get_z(*i, *nf, GMP_RNDN);
+#else
+				mpz_set_f(*i, *nf);
+#endif
+			} else if (class == cGMPRational) {
+				mpq_t *nq;
+				Data_Get_Struct(intData, mpq_t, nq);
+				mpz_set_q(*i, *nq);
 			} else {
-				rb_raise(rb_eTypeError, "input data type not supported");
+				rb_raise(rb_eTypeError, "default value's class not supported");
 			}
 			break;
 		}
@@ -76,7 +93,7 @@ z_init( VALUE self, VALUE intData ) {
 			break;
 		}
 		default: {
-			rb_raise(rb_eTypeError, "input data type not supported");
+			rb_raise(rb_eTypeError, "default value's class not supported");
 		}
 	}
 	
