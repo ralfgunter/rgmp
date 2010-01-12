@@ -35,7 +35,6 @@ integer_free( mpz_t *i ) {
 VALUE
 integer_allocate( VALUE klass ) {
 	mpz_t *i = malloc(sizeof(mpz_t));
-	mpz_init(*i);
 	return Data_Wrap_Struct(klass, integer_mark, integer_free, i);
 }
 
@@ -45,6 +44,7 @@ z_init( VALUE self, VALUE intData ) {
 	// Creates a mpz_t pointer and loads self in it
 	mpz_t *i;
 	Data_Get_Struct(self, mpz_t, i);
+	mpz_init(*i);
 	
 	switch (TYPE(intData)) {
 		case T_STRING: {
