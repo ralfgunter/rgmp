@@ -87,6 +87,8 @@ extern VALUE z_set_bit_inplace(VALUE, VALUE, VALUE);
 extern VALUE z_addition_inplace(VALUE, VALUE);
 extern VALUE z_subtraction_inplace(VALUE, VALUE);
 extern VALUE z_multiplication_inplace(VALUE, VALUE);
+extern VALUE z_addmul_inplace(VALUE, VALUE, VALUE);
+extern VALUE z_submul_inplace(VALUE, VALUE, VALUE);
 
 // Question-like methods
 extern VALUE z_divisible(VALUE, VALUE);
@@ -106,6 +108,7 @@ extern VALUE z_size_in_base(VALUE, VALUE);
 extern VALUE z_swap(VALUE, VALUE);
 extern VALUE z_next(VALUE);
 extern VALUE z_get_bit(VALUE, VALUE);
+extern VALUE z_coerce(VALUE, VALUE);
 
 // Singletons/Class methods
 extern VALUE z_powermod(VALUE, VALUE, VALUE, VALUE);
@@ -123,6 +126,8 @@ extern VALUE z_invert_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_lcm_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_gcd_singleton(VALUE, VALUE, VALUE);
 extern VALUE z_jacobi_singleton(VALUE, VALUE, VALUE);
+extern VALUE z_kronecker(VALUE, VALUE, VALUE);
+extern VALUE z_extended_gcd(VALUE, VALUE, VALUE);
 
 
 
