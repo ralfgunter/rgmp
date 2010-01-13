@@ -777,14 +777,59 @@ z_equality_test( VALUE self, VALUE other ) {
 	// Immediate responses to avoid one object creation
 	switch (TYPE(other)) {
 		case T_DATA: {
-			if (rb_obj_class(other) == cGMPInteger) {
-				mpz_t *od;
-				Data_Get_Struct(other, mpz_t, od);
+			VALUE class = rb_obj_class(other);
+			
+			if (class == cGMPInteger) {
+				mpz_t *oz;
+				Data_Get_Struct(other, mpz_t, oz);
 				
-				if (mpz_cmp(*i, *od) == 0)
+				if (mpz_cmp(*i, *oz) == 0)
 					return Qtrue;
 				else
 					return Qfalse;
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+				// MPFR provides a convenient way of comparing a mpfr_t to mpz_t
+				mpfr_t *of;
+				Data_Get_Struct(other, mpfr_t, of);
+				
+				if (mpfr_cmp_z(*of, *i) == 0)
+					return Qtrue;
+				else
+					return Qfalse;
+#else
+				// If MPFR is not present, we have to convert the mpz_t into a
+				// a mpf_t and then check against it.
+				mpf_t *of, *i_f;
+				Data_Get_Struct(other, mpf_t, of);
+				
+				mpf_init(*i_f);
+				mpf_set_z(*i_f, *i);
+				
+				if (mpf_cmp(*i_f, *of) == 0) {
+					mpf_clear(*i_f);
+					return Qtrue;
+				} else {
+					mpf_clear(*i_f);
+					return Qfalse;
+				}
+#endif
+			} else if (class == cGMPRational) {
+				// Similarly, we have to convert the mpz_t to a mpq_t before
+				// comparing them.
+				mpq_t *oq, *i_q;
+				Data_Get_Struct(other, mpq_t, oq);
+				
+				mpq_init(*i_q);
+				mpq_set_z(*i_q, *i);
+				
+				if (mpq_equal(*i_q, *oq) == 0) {
+					mpq_clear(*i_q);
+					return Qtrue;
+				} else {
+					mpq_clear(*i_q);
+					return Qfalse;
+				}
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -836,7 +881,9 @@ z_greater_than_test( VALUE self, VALUE other ) {
 	// Immediate responses to avoid one object creation
 	switch (TYPE(other)) {
 		case T_DATA: {
-			if (rb_obj_class(other) == cGMPInteger) {
+			VALUE class = rb_obj_class(other);
+			
+			if (class == cGMPInteger) {
 				mpz_t *od;
 				Data_Get_Struct(other, mpz_t, od);
 				
@@ -844,6 +891,44 @@ z_greater_than_test( VALUE self, VALUE other ) {
 					return Qtrue;
 				else
 					return Qfalse;
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+				mpfr_t *of;
+				Data_Get_Struct(other, mpfr_t, of);
+				
+				if (mpfr_cmp_z(*of, *i) < 0)
+					return Qtrue;
+				else
+					return Qfalse;
+#else
+				mpf_t *of, *i_f;
+				Data_Get_Struct(other, mpf_t, of);
+				
+				mpf_init(*i_f);
+				mpf_set_z(*i_f, *i);
+				
+				if (mpf_cmp(*i_f, *of) > 0) {
+					mpf_clear(*i_f);
+					return Qtrue;
+				} else {
+					mpf_clear(*i_f);
+					return Qfalse;
+				}
+#endif
+			} else if (class == cGMPRational) {
+				mpq_t *oq, *i_q;
+				Data_Get_Struct(other, mpq_t, oq);
+				
+				mpq_init(*i_q);
+				mpq_set_z(*i_q, *i);
+				
+				if (mpq_cmp(*i_q, *oq) > 0) {
+					mpq_clear(*i_q);
+					return Qtrue;
+				} else {
+					mpq_clear(*i_q);
+					return Qfalse;
+				}
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -891,14 +976,54 @@ z_less_than_test( VALUE self, VALUE other ) {
 	// Immediate responses to avoid one object creation
 	switch (TYPE(other)) {
 		case T_DATA: {
-			if (rb_obj_class(other) == cGMPInteger) {
-				mpz_t *od;
-				Data_Get_Struct(other, mpz_t, od);
+			VALUE class = rb_obj_class(other);
+			
+			if (class == cGMPInteger) {
+				mpz_t *oz;
+				Data_Get_Struct(other, mpz_t, oz);
 				
-				if (mpz_cmp(*i, *od) < 0)
+				if (mpz_cmp(*i, *oz) < 0)
 					return Qtrue;
 				else
 					return Qfalse;
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+				mpfr_t *of;
+				Data_Get_Struct(other, mpfr_t, of);
+				
+				if (mpfr_cmp_z(*of, *i) > 0)
+					return Qtrue;
+				else
+					return Qfalse;
+#else
+				mpf_t *of, *i_f;
+				Data_Get_Struct(other, mpf_t, of);
+				
+				mpf_init(*i_f);
+				mpf_set_z(*i_f, *i);
+				
+				if (mpf_cmp(*i_f, *of) < 0) {
+					mpf_clear(*i_f);
+					return Qtrue;
+				} else {
+					mpf_clear(*i_f);
+					return Qfalse;
+				}
+#endif
+			} else if (class == cGMPRational) {
+				mpq_t *oq, *i_q;
+				Data_Get_Struct(other, mpq_t, oq);
+				
+				mpq_init(*i_q);
+				mpq_set_z(*i_q, *i);
+				
+				if (mpq_cmp(*i_q, *oq) < 0) {
+					mpq_clear(*i_q);
+					return Qtrue;
+				} else {
+					mpq_clear(*i_q);
+					return Qfalse;
+				}
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -946,14 +1071,54 @@ z_greater_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Immediate responses to avoid one object creation
 	switch (TYPE(other)) {
 		case T_DATA: {
-			if (rb_obj_class(other) == cGMPInteger) {
-				mpz_t *od;
-				Data_Get_Struct(other, mpz_t, od);
+			VALUE class = rb_obj_class(other);
+			
+			if (class == cGMPInteger) {
+				mpz_t *oz;
+				Data_Get_Struct(other, mpz_t, oz);
 				
-				if (mpz_cmp(*i, *od) >= 0)
+				if (mpz_cmp(*i, *oz) >= 0)
 					return Qtrue;
 				else
 					return Qfalse;
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+				mpfr_t *of;
+				Data_Get_Struct(other, mpfr_t, of);
+				
+				if (mpfr_cmp_z(*of, *i) <= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+#else
+				mpf_t *of, *i_f;
+				Data_Get_Struct(other, mpf_t, of);
+				
+				mpf_init(*i_f);
+				mpf_set_z(*i_f, *i);
+				
+				if (mpf_cmp(*i_f, *of) >= 0) {
+					mpf_clear(*i_f);
+					return Qtrue;
+				} else {
+					mpf_clear(*i_f);
+					return Qfalse;
+				}
+#endif
+			} else if (class == cGMPRational) {
+				mpq_t *oq, *i_q;
+				Data_Get_Struct(other, mpq_t, oq);
+				
+				mpq_init(*i_q);
+				mpq_set_z(*i_q, *i);
+				
+				if (mpq_cmp(*i_q, *oq) >= 0) {
+					mpq_clear(*i_q);
+					return Qtrue;
+				} else {
+					mpq_clear(*i_q);
+					return Qfalse;
+				}
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -1001,14 +1166,54 @@ z_less_than_or_equal_to_test( VALUE self, VALUE other ) {
 	// Immediate responses to avoid one object creation
 	switch (TYPE(other)) {
 		case T_DATA: {
-			if (rb_obj_class(other) == cGMPInteger) {
-				mpz_t *od;
-				Data_Get_Struct(other, mpz_t, od);
+			VALUE class = rb_obj_class(other);
+			
+			if (class == cGMPInteger) {
+				mpz_t *oz;
+				Data_Get_Struct(other, mpz_t, oz);
 				
-				if (mpz_cmp(*i, *od) <= 0)
+				if (mpz_cmp(*i, *oz) <= 0)
 					return Qtrue;
 				else
 					return Qfalse;
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+				mpfr_t *of;
+				Data_Get_Struct(other, mpfr_t, of);
+				
+				if (mpfr_cmp_z(*of, *i) >= 0)
+					return Qtrue;
+				else
+					return Qfalse;
+#else
+				mpf_t *of, *i_f;
+				Data_Get_Struct(other, mpf_t, of);
+				
+				mpf_init(*i_f);
+				mpf_set_z(*i_f, *i);
+				
+				if (mpf_cmp(*i_f, *of) <= 0) {
+					mpf_clear(*i_f);
+					return Qtrue;
+				} else {
+					mpf_clear(*i_f);
+					return Qfalse;
+				}
+#endif
+			} else if (class == cGMPRational) {
+				mpq_t *oq, *i_q;
+				Data_Get_Struct(other, mpq_t, oq);
+				
+				mpq_init(*i_q);
+				mpq_set_z(*i_q, *i);
+				
+				if (mpq_cmp(*i_q, *oq) <= 0) {
+					mpq_clear(*i_q);
+					return Qtrue;
+				} else {
+					mpq_clear(*i_q);
+					return Qfalse;
+				}
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -1056,10 +1261,43 @@ z_generic_comparison( VALUE self, VALUE other ) {
 	// Immediate responses to avoid one object creation
 	switch (TYPE(other)) {
 		case T_DATA: {
-			if (rb_obj_class(other) == cGMPInteger) {
-				mpz_t *od;
-				Data_Get_Struct(other, mpz_t, od);
-				return INT2FIX(mpz_cmp(*i, *od));
+			VALUE class = rb_obj_class(other);
+			
+			if (class == cGMPInteger) {
+				mpz_t *oz;
+				Data_Get_Struct(other, mpz_t, oz);
+				return INT2FIX(mpz_cmp(*i, *oz));
+			} else if (class == cGMPFloat) {
+#ifdef MPFR
+				mpfr_t *of;
+				Data_Get_Struct(other, mpfr_t, of);
+				
+				// As the arguments of mpfr_cmp_z are inverted, the result must
+				// also be negated.
+				return INT2FIX(-mpfr_cmp_z(*of, *i));
+#else
+				mpf_t *of, *i_f;
+				Data_Get_Struct(other, mpf_t, of);
+				
+				mpf_init(*i_f);
+				mpf_set_z(*i_f, *i);
+				
+				int result = mpf_cmp(*i_f, *of);
+				mpf_clear(*i_f);
+				
+				return INT2FIX(result);
+#endif
+			} else if (class == cGMPRational) {
+				mpq_t *oq, *i_q;
+				Data_Get_Struct(other, mpq_t, oq);
+				
+				mpq_init(*i_q);
+				mpq_set_z(*i_q, *i);
+				
+				int result = mpq_cmp(*i_q, *oq);
+				mpq_clear(*i_q);
+				
+				return INT2FIX(result);
 			} else {
 				rb_raise(rb_eTypeError, "input data type not supported");
 			}
@@ -2245,95 +2483,95 @@ Init_gmpz() {
 	// Converters
 	rb_define_method(cGMPInteger, "to_s", z_to_string, -1);
 	rb_define_method(cGMPInteger, "to_i", z_to_integer, 0);
-	rb_define_method(cGMPInteger, "to_f", z_to_float, 0);
+	rb_define_method(cGMPInteger, "to_f", z_to_float,   0);
 	
 	// Binary operators
-	rb_define_method(cGMPInteger, "+", z_addition, 1);
-	rb_define_method(cGMPInteger, "-", z_subtraction, 1);
-	rb_define_method(cGMPInteger, "*", z_multiplication, 1);
-	rb_define_method(cGMPInteger, "/", z_division, 1);
-	rb_define_method(cGMPInteger, "%", z_modulo, 1);
-	rb_define_method(cGMPInteger, "**", z_power, 1);
-	rb_define_method(cGMPInteger, "<<", z_left_shift, 1);
-	rb_define_method(cGMPInteger, ">>", z_right_shift, 1);
+	rb_define_method(cGMPInteger, "+",  z_addition,       1);
+	rb_define_method(cGMPInteger, "-",  z_subtraction,    1);
+	rb_define_method(cGMPInteger, "*",  z_multiplication, 1);
+	rb_define_method(cGMPInteger, "/",  z_division,       1);
+	rb_define_method(cGMPInteger, "%",  z_modulo,         1);
+	rb_define_method(cGMPInteger, "**", z_power,          1);
+	rb_define_method(cGMPInteger, "<<", z_left_shift,     1);
+	rb_define_method(cGMPInteger, ">>", z_right_shift,    1);
 	
 	// Unary operators
 	rb_define_method(cGMPInteger, "+@", z_positive, 0);
 	rb_define_method(cGMPInteger, "-@", z_negation, 0);
 	
 	// Logic operators
-	rb_define_method(cGMPInteger, "&", z_logic_and, 1);
-	rb_define_method(cGMPInteger, "|", z_logic_ior, 1);
-	rb_define_method(cGMPInteger, "^", z_logic_xor, 1);
+	rb_define_method(cGMPInteger, "&",   z_logic_and, 1);
+	rb_define_method(cGMPInteger, "|",   z_logic_ior, 1);
+	rb_define_method(cGMPInteger, "^",   z_logic_xor, 1);
 	rb_define_method(cGMPInteger, "com", z_logic_not, 0);
 	
 	// Comparisons
-	rb_define_method(cGMPInteger, "==", z_equality_test, 1);
-	rb_define_method(cGMPInteger, ">", z_greater_than_test, 1);
-	rb_define_method(cGMPInteger, "<", z_less_than_test, 1);
-	rb_define_method(cGMPInteger, ">=", z_greater_than_or_equal_to_test, 1);
-	rb_define_method(cGMPInteger, "<=", z_less_than_or_equal_to_test, 1);
-	rb_define_method(cGMPInteger, "<=>", z_generic_comparison, 1);
+	rb_define_method(cGMPInteger, "==",  z_equality_test,                 1);
+	rb_define_method(cGMPInteger, ">",   z_greater_than_test,             1);
+	rb_define_method(cGMPInteger, "<",   z_less_than_test,                1);
+	rb_define_method(cGMPInteger, ">=",  z_greater_than_or_equal_to_test, 1);
+	rb_define_method(cGMPInteger, "<=",  z_less_than_or_equal_to_test,    1);
+	rb_define_method(cGMPInteger, "<=>", z_generic_comparison,            1);
 	
 	// Inplace methods
-	rb_define_method(cGMPInteger, "abs!", z_absolute_inplace, 0);
-	rb_define_method(cGMPInteger, "neg!", z_negation_inplace, 0);
-	rb_define_method(cGMPInteger, "next_prime!", z_next_prime_inplace, 0);
-	rb_define_method(cGMPInteger, "sqrt!", z_sqrt_inplace, 0);
-	rb_define_method(cGMPInteger, "root!", z_root_inplace, 1);
-	rb_define_method(cGMPInteger, "invert!", z_invert_inplace, 1);
-	rb_define_method(cGMPInteger, "[]=", z_set_bit_inplace, 2);
-	rb_define_method(cGMPInteger, "add!", z_addition_inplace, 1);
-	rb_define_method(cGMPInteger, "sub!", z_subtraction_inplace, 1);
-	rb_define_method(cGMPInteger, "mul!", z_multiplication_inplace, 1);
-	rb_define_method(cGMPInteger, "addmul", z_addmul_inplace, 2);
-	rb_define_method(cGMPInteger, "submul", z_submul_inplace, 2);
+	rb_define_method(cGMPInteger, "abs!",        z_absolute_inplace,       0);
+	rb_define_method(cGMPInteger, "neg!",        z_negation_inplace,       0);
+	rb_define_method(cGMPInteger, "next_prime!", z_next_prime_inplace,     0);
+	rb_define_method(cGMPInteger, "sqrt!",       z_sqrt_inplace,           0);
+	rb_define_method(cGMPInteger, "root!",       z_root_inplace,           1);
+	rb_define_method(cGMPInteger, "invert!",     z_invert_inplace,         1);
+	rb_define_method(cGMPInteger, "[]=",         z_set_bit_inplace,        2);
+	rb_define_method(cGMPInteger, "add!",        z_addition_inplace,       1);
+	rb_define_method(cGMPInteger, "sub!",        z_subtraction_inplace,    1);
+	rb_define_method(cGMPInteger, "mul!",        z_multiplication_inplace, 1);
+	rb_define_method(cGMPInteger, "addmul",      z_addmul_inplace,         2);
+	rb_define_method(cGMPInteger, "submul",      z_submul_inplace,         2);
 	
 	// Question-like methods
-	rb_define_method(cGMPInteger, "divisible_by?", z_divisible, 1);
-	rb_define_method(cGMPInteger, "perfect_power?", z_perfect_power, 0);
-	rb_define_method(cGMPInteger, "perfect_square?", z_perfect_square, 0);
-	rb_define_method(cGMPInteger, "probable_prime?", z_probable_prime, 1);
-	rb_define_method(cGMPInteger, "even?", z_even, 0);
-	rb_define_method(cGMPInteger, "odd?", z_odd, 0);
-	rb_define_method(cGMPInteger, "eql?", z_precise_equality, 1);
-	rb_define_method(cGMPInteger, "zero?", z_zero, 0);
-	rb_define_method(cGMPInteger, "nonzero?", z_nonzero, 0);
+	rb_define_method(cGMPInteger, "divisible_by?",   z_divisible,        1);
+	rb_define_method(cGMPInteger, "perfect_power?",  z_perfect_power,    0);
+	rb_define_method(cGMPInteger, "perfect_square?", z_perfect_square,   0);
+	rb_define_method(cGMPInteger, "probable_prime?", z_probable_prime,   1);
+	rb_define_method(cGMPInteger, "even?",           z_even,             0);
+	rb_define_method(cGMPInteger, "odd?",            z_odd,              0);
+	rb_define_method(cGMPInteger, "eql?",            z_precise_equality, 1);
+	rb_define_method(cGMPInteger, "zero?",           z_zero,             0);
+	rb_define_method(cGMPInteger, "nonzero?",        z_nonzero,          0);
 	
 	// Other operations
-	rb_define_method(cGMPInteger, "abs", z_absolute, 0);
-	rb_define_method(cGMPInteger, "next_prime", z_next_prime, 0);
+	rb_define_method(cGMPInteger, "abs",          z_absolute, 0);
+	rb_define_method(cGMPInteger, "next_prime",   z_next_prime, 0);
 	rb_define_method(cGMPInteger, "size_in_base", z_size_in_base, 1);
-	rb_define_method(cGMPInteger, "swap", z_swap, 1);
-	rb_define_method(cGMPInteger, "next", z_next, 0);
-	rb_define_method(cGMPInteger, "[]", z_get_bit, 1);
-	rb_define_method(cGMPInteger, "coerce", z_coerce, 1);
+	rb_define_method(cGMPInteger, "swap",         z_swap, 1);
+	rb_define_method(cGMPInteger, "next",         z_next, 0);
+	rb_define_method(cGMPInteger, "[]",           z_get_bit, 1);
+	rb_define_method(cGMPInteger, "coerce",       z_coerce, 1);
 	
 	// Singletons/Class methods
-	rb_define_singleton_method(cGMPInteger, "powermod", z_powermod, 3);
-	rb_define_singleton_method(cGMPInteger, "sqrt", z_sqrt_singleton, 1);
-	rb_define_singleton_method(cGMPInteger, "root", z_root_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "fib", z_fibonacci_singleton, 1);
-	rb_define_singleton_method(cGMPInteger, "fib2", z_fibonacci2_singleton, 1);
-	rb_define_singleton_method(cGMPInteger, "luc", z_lucas_singleton, 1);
-	rb_define_singleton_method(cGMPInteger, "luc2", z_lucas2_singleton, 1);
-	rb_define_singleton_method(cGMPInteger, "fac", z_factorial_singleton, 1);
-	rb_define_singleton_method(cGMPInteger, "bin", z_binomial_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "remove", z_remove_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "cmpabs", z_comp_abs_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "invert", z_invert_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "lcm", z_lcm_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "gcd", z_gcd_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "jacobi", z_jacobi_singleton, 2);
-	rb_define_singleton_method(cGMPInteger, "kronecker", z_kronecker, 2);
-	rb_define_singleton_method(cGMPInteger, "xgcd", z_extended_gcd, 2);
+	rb_define_singleton_method(cGMPInteger, "powermod",  z_powermod,             3);
+	rb_define_singleton_method(cGMPInteger, "sqrt",      z_sqrt_singleton,       1);
+	rb_define_singleton_method(cGMPInteger, "root",      z_root_singleton,       2);
+	rb_define_singleton_method(cGMPInteger, "fib",       z_fibonacci_singleton,  1);
+	rb_define_singleton_method(cGMPInteger, "fib2",      z_fibonacci2_singleton, 1);
+	rb_define_singleton_method(cGMPInteger, "luc",       z_lucas_singleton,      1);
+	rb_define_singleton_method(cGMPInteger, "luc2",      z_lucas2_singleton,     1);
+	rb_define_singleton_method(cGMPInteger, "fac",       z_factorial_singleton,  1);
+	rb_define_singleton_method(cGMPInteger, "bin",       z_binomial_singleton,   2);
+	rb_define_singleton_method(cGMPInteger, "remove",    z_remove_singleton,     2);
+	rb_define_singleton_method(cGMPInteger, "cmpabs",    z_comp_abs_singleton,   2);
+	rb_define_singleton_method(cGMPInteger, "invert",    z_invert_singleton,     2);
+	rb_define_singleton_method(cGMPInteger, "lcm",       z_lcm_singleton,        2);
+	rb_define_singleton_method(cGMPInteger, "gcd",       z_gcd_singleton,        2);
+	rb_define_singleton_method(cGMPInteger, "jacobi",    z_jacobi_singleton,     2);
+	rb_define_singleton_method(cGMPInteger, "kronecker", z_kronecker,            2);
+	rb_define_singleton_method(cGMPInteger, "xgcd",      z_extended_gcd,         2);
 	
 	// Aliases
-	rb_define_alias(cGMPInteger, "modulo", "%");
+	rb_define_alias(cGMPInteger, "modulo",    "%");
 	rb_define_alias(cGMPInteger, "magnitude", "abs");
-	rb_define_alias(cGMPInteger, "to_int", "to_i");
-	rb_define_alias(cGMPInteger, "to_d", "to_f");
-	rb_define_alias(cGMPInteger, "not", "com");
+	rb_define_alias(cGMPInteger, "to_int",    "to_i");
+	rb_define_alias(cGMPInteger, "to_d",      "to_f");
+	rb_define_alias(cGMPInteger, "not",       "com");
 	// Whether or not this is a good idea is debatable, but for now...
 	rb_define_singleton_method(cGMPInteger, "legendre", z_jacobi_singleton, 2);
 }
