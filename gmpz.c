@@ -1479,13 +1479,14 @@ z_addition_inplace( VALUE self, VALUE summand ) {
 			break;
 		}
 		case T_FIXNUM: {
-			// Yep, also smells like a bad hack
-			// Unfortunately, GMP does not have an addition function that deals
-			// with signed ints
-			mpz_t tempSuf;
-			mpz_init_set_si(tempSuf, FIX2LONG(summand));
-			mpz_add(*i, *i, tempSuf);
-			mpz_clear(tempSuf);
+			long tempSummand = FIX2LONG(summand);
+			
+			if (tempSummand > 0) {
+				mpz_add_ui(*i, *i, tempSummand);
+			} else {
+				mpz_sub_ui(*i, *i, -tempSummand);
+			}
+			
 			break;
 		}
 		case T_BIGNUM: {
@@ -1524,12 +1525,14 @@ z_subtraction_inplace( VALUE self, VALUE subtraend ) {
 			break;
 		}
 		case T_FIXNUM: {
-			// Yep, also smells like a bad hack
-			// Unfortunately, GMP does not have a subtraction function that
-			// deals with signed ints
-			mpz_t tempSuf;
-			mpz_init_set_si(tempSuf, FIX2LONG(subtraend));
-			mpz_sub(*i, *i, tempSuf);
+			long tempSubtraend = FIX2LONG(subtraend);
+			
+			if (tempSubtraend > 0) {
+				mpz_sub_ui(*i, *i, tempSubtraend);
+			} else {
+				mpz_add_ui(*i, *i, -tempSubtraend);
+			}
+			
 			break;
 		}
 		case T_BIGNUM: {
@@ -1590,7 +1593,7 @@ z_multiplication_inplace( VALUE self, VALUE multiplicand ) {
 }
 
 // Multiply two values and then add to self
-// {GMP::Integer}, {GMP::Integer}
+// {GMP::Integer}, {GMP::Integer} -> {}
 VALUE
 z_addmul_inplace( VALUE self, VALUE first, VALUE second ) {
 	// Create pointers to self, first and second
@@ -1608,7 +1611,7 @@ z_addmul_inplace( VALUE self, VALUE first, VALUE second ) {
 }
 
 // Multiply two values and then subtract from self
-// {GMP::Integer}, {GMP::Integer}
+// {GMP::Integer}, {GMP::Integer} -> {}
 VALUE
 z_submul_inplace( VALUE self, VALUE first, VALUE second ) {
 	// Create pointers to self, first and second
